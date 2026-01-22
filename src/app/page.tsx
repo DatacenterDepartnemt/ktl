@@ -1,65 +1,162 @@
+import clientPromise from "@/lib/db";
+import Link from "next/link";
 import Image from "next/image";
+import Navbar from "@/components/Navbar";
 
-export default function Home() {
+// Interface ข้อมูลข่าว
+interface NewsItem {
+  _id: string;
+  title: string;
+  category: string;
+  images?: string[];
+  content?: string;
+  createdAt: string;
+}
+
+// ดึงข่าว 4 รายการ
+async function getLatestNews(): Promise<NewsItem[]> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("ktltc_db");
+    const news = await db
+      .collection("news")
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .toArray();
+    return JSON.parse(JSON.stringify(news));
+  } catch {
+    return [];
+  }
+}
+
+// Helper: แปลงวันที่เป็นภาษาไทย
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+export default async function Home() {
+  const latestNews = await getLatestNews();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen flex flex-col relative bg-[#f8f9fa]">
+      {" "}
+      {/* พื้นหลังขาวเทาจางๆ */}
+      <Navbar />
+      <div className="container mx-auto px-4 py-16">
+        {/* --- Header Section (ตามแบบเป๊ะ) --- */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+          {/* ฝั่งซ้าย: หัวข้อข่าว */}
+          <div className="flex gap-4">
+            {/* เส้นขีดสีส้มแนวตั้ง */}
+            <div className="w-1.5 bg-orange-500 rounded-full h-auto self-stretch"></div>
+
+            <div className="space-y-1">
+              {/* UPDATE NEWS สีส้ม */}
+              <h4 className="text-orange-500 font-bold text-xs tracking-widest uppercase">
+                Update News
+              </h4>
+              {/* ข่าวประชาสัมพันธ์ ตัวใหญ่ */}
+              <h1 className="text-3xl md:text-4xl font-bold text-zinc-800">
+                ข่าวประชาสัมพันธ์
+              </h1>
+              {/* คำอธิบายย่อย */}
+              <p className="text-zinc-500 text-sm">
+                ติดตามข่าวสารและกิจกรรมล่าสุดของเรา
+              </p>
+            </div>
+          </div>
+
+          {/* ฝั่งขวา: ปุ่มดูข่าวทั้งหมด (สีส้ม) */}
+          <Link
+            href="/news"
+            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-md shadow-orange-200 self-start md:self-center"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+              />
+            </svg>
+            ดูข่าวทั้งหมด
+          </Link>
         </div>
-      </main>
-    </div>
+
+        {/* --- News Grid (4 การ์ดเรียงกัน) --- */}
+        {latestNews.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {latestNews.map((news) => (
+              <Link
+                href={`/news/${news._id}`}
+                key={news._id}
+                className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-zinc-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+              >
+                {/* 1. รูปภาพ (สัดส่วน 4:3 เหมือนในรูป) */}
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-zinc-100">
+                  <Image
+                    src={news.images?.[0] || "/no-image.png"}
+                    alt={news.title}
+                    fill
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* 2. เนื้อหาการ์ด */}
+                <div className="p-5 flex flex-col flex-1">
+                  {/* วันที่ (ไอคอนปฏิทิน + วันที่ไทย) */}
+                  <div className="flex items-center gap-2 mb-3 text-zinc-400 text-xs font-medium">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {formatDate(news.createdAt)}
+                  </div>
+
+                  {/* หัวข้อข่าว (ตัวหนา สีเข้ม) */}
+                  <h3 className="text-lg font-bold text-zinc-800 mb-3 line-clamp-2 leading-snug group-hover:text-orange-500 transition-colors">
+                    {news.title}
+                  </h3>
+
+                  {/* เนื้อหาย่อ (Snippet สีเทา) */}
+                  <p className="text-zinc-500 text-xs line-clamp-3 leading-relaxed">
+                    {news.content?.replace(/<[^>]+>/g, "") ||
+                      "อ่านรายละเอียดเพิ่มเติม..."}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          // กรณีไม่มีข่าว
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-zinc-300 rounded-2xl bg-white/50">
+            <div className="text-4xl mb-4">📰</div>
+            <h3 className="text-xl font-bold text-zinc-600">
+              ยังไม่มีข่าวประชาสัมพันธ์
+            </h3>
+            <p className="text-zinc-400">โปรดรอติดตามการอัปเดตเร็วๆ นี้</p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

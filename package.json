@@ -9,15 +9,24 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^2.9.0",
+    "mongoose": "^9.1.5",
     "next": "16.1.4",
+    "next-auth": "^5.0.0-beta.30",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "suneditor": "^2.47.8",
+    "suneditor-react": "^3.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^20.19.30",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",

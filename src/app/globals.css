@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* พื้นหลัง: สีขาวควันบุหรี่/ขาวนวล (Neutral-50) ไม่ใช่ขาวโอโม่ (#ffffff) */
+  --background: #fafafa;
+  /* ตัวหนังสือ: สีเทาเข้มเกือบดำ (Zinc-900) อ่านง่ายสบายตา */
+  --foreground: #18181b;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  /* แสง Glow: ปรับให้จางลงเล็กน้อยเพื่อให้เข้ากับพื้นขาว ดูคลีนๆ */
+  background-image:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(59, 130, 246, 0.08) 0%,
+      /* สีฟ้าจางๆ */ transparent 50%
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(139, 92, 246, 0.05) 0%,
+      /* สีม่วงจางๆ */ transparent 40%
+    );
+  min-height: 100vh;
+}
+
+/* Scrollbar: ปรับเป็นโทนสีเทาสว่าง */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f4f4f5; /* รางเลื่อนสีเทาอ่อนมาก */
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8; /* ตัวเลื่อนสีเทากลางๆ */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa; /* สีเข้มขึ้นเมื่อเอาเมาส์ชี้ */
 }
