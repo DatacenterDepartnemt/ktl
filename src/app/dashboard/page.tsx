@@ -155,7 +155,7 @@ export default async function DashboardPage() {
         {/* Card 5: พื้นที่ MongoDB */}
         <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
           <h3 className="font-bold uppercase tracking-widest text-[10px] text-emerald-600">
-            DB Usage
+            DB Usage ฟรีสูงสุด 512 MB
           </h3>
           <div className="flex items-baseline gap-1 mt-2">
             <p className="text-2xl font-black text-emerald-700">
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
         {/* Card 6: พื้นที่ Cloudinary */}
         <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
           <h3 className="font-bold uppercase tracking-widest text-[10px] text-blue-600">
-            Cloud Usage
+            Cloud Usage ฟรีสูงสุด 10-15 GB 20,000 รูป โดยประมาณ
           </h3>
           <div className="flex items-baseline gap-1 mt-2">
             <p className="text-2xl font-black text-blue-700">

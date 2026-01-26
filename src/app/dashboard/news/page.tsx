@@ -1,9 +1,8 @@
 import clientPromise from "@/lib/db";
 import Link from "next/link";
 import Image from "next/image";
-import DeleteNewsBtn from "@/components/DeleteNewsBtn"; // ✅ ต้องมั่นใจว่าไฟล์นี้แก้ตามข้อ 1 แล้ว
+import DeleteNewsBtn from "@/components/DeleteNewsBtn";
 
-// ✅ ใช้ revalidate = 0 เพื่อให้ข้อมูลสดใหม่เสมอ (แก้ปัญหาเพิ่มข่าวแล้วไม่ขึ้น)
 export const revalidate = 0;
 
 interface NewsItem {
@@ -12,6 +11,7 @@ interface NewsItem {
   category?: string;
   categories?: string[];
   images?: string[];
+  announcementImages?: string[]; // ✅ เพิ่มฟิลด์นี้
   createdAt: string;
 }
 
@@ -28,11 +28,11 @@ async function getNews(): Promise<NewsItem[]> {
         category: 1,
         categories: 1,
         images: 1,
+        announcementImages: 1, // ✅ ดึงมาด้วยเพื่อให้เลือกใช้เป็นปกได้
         createdAt: 1,
       })
       .toArray();
 
-    // แปลง ObjectId เป็น String เพื่อไม่ให้ Error ตอนส่งเข้า Component
     return JSON.parse(JSON.stringify(news));
   } catch (error) {
     console.error("Database Error:", error);
@@ -52,7 +52,7 @@ export default async function ManageNewsPage() {
             จัดการข่าวสาร
           </h1>
           <p className="text-zinc-500 mt-1 text-sm md:text-base">
-            รายการข่าวประชาสัมพันธ์ทั้งหมด
+            รายการข่าวประชาสัมพันธ์ทั้งหมด ({newsList.length} รายการ)
           </p>
         </div>
 
@@ -80,7 +80,10 @@ export default async function ManageNewsPage() {
       {/* Grid Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {newsList.map((news, index) => {
-          // Logic รองรับ Category ทั้งเก่าและใหม่
+          // ✅ Logic เลือกรูปปก: เอาจาก images ก่อน ถ้าไม่มีเอาจาก announcementImages ถ้าไม่มีเลยค่อยใช้ No Image
+          const displayImage =
+            news.images?.[0] || news.announcementImages?.[0] || "/no-image.png";
+
           const displayCategories =
             news.categories && news.categories.length > 0
               ? news.categories
@@ -91,17 +94,17 @@ export default async function ManageNewsPage() {
           return (
             <div
               key={news._id}
-              className="group bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              className="group bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
             >
               {/* ส่วนรูปภาพ */}
-              <div className="relative w-full aspect-4/3 bg-zinc-100 overflow-hidden">
+              <div className="relative w-full aspect-[4/3] bg-zinc-100 overflow-hidden">
                 <Image
-                  src={news.images?.[0] || "/no-image.png"}
+                  src={displayImage}
                   alt={news.title}
                   fill
-                  priority={index < 2}
+                  priority={index < 4}
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
 
                 <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[90%]">
@@ -118,9 +121,9 @@ export default async function ManageNewsPage() {
 
               {/* ส่วนเนื้อหา */}
               <div className="p-5 flex flex-col flex-1">
-                <div className="flex items-center gap-2 mb-3 text-zinc-400 text-xs font-medium">
+                <div className="flex items-center gap-2 mb-3 text-zinc-400 text-[11px] font-medium">
                   <svg
-                    className="w-4 h-4"
+                    className="w-3.5 h-3.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -139,7 +142,7 @@ export default async function ManageNewsPage() {
                   })}
                 </div>
 
-                <h3 className="text-lg font-bold text-zinc-900 mb-4 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                <h3 className="text-base font-bold text-zinc-900 mb-4 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors min-h-[3rem]">
                   {news.title}
                 </h3>
 
@@ -164,7 +167,6 @@ export default async function ManageNewsPage() {
                     แก้ไข
                   </Link>
 
-                  {/* ✅ ปุ่มลบ (ต้องมาจากไฟล์ที่มี "use client") */}
                   <DeleteNewsBtn id={news._id} />
                 </div>
               </div>

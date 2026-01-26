@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { uploadToCloudinary } from "@/lib/upload";
+import imageCompression from "browser-image-compression";
 import "suneditor/dist/css/suneditor.min.css";
 
 // --- Config ---
@@ -47,19 +48,9 @@ const fontList = [
   "Kanit",
   "Prompt",
   "Mitr",
-  "Taviraj",
-  "Chakra Petch",
-  "Bai Jamjuree",
-  "Mali",
   "Roboto",
-  "Open Sans",
-  "Lato",
-  "Montserrat",
   "Arial",
-  "Courier New",
-  "Georgia",
   "Tahoma",
-  "Verdana",
 ];
 
 export default function EditNewsPage({
@@ -70,21 +61,33 @@ export default function EditNewsPage({
   const { id } = use(params);
   const router = useRouter();
 
+  // Loading States
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [SunEditorComponent, setSunEditorComponent] =
     useState<React.ComponentType<any> | null>(null);
 
-  // States
+  // ข้อมูลข่าว
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
 
+  // --- ระบบจัดการรูปภาพเดิม (URLs) ---
   const [images, setImages] = useState<string[]>([]);
-  const [newFile, setNewFile] = useState<File | null>(null); // ไฟล์ใหม่ที่รออัปโหลด
+  const [selectedImages, setSelectedImages] = useState<number[]>([]); // เก็บ index รูปทั่วไปที่เลือก
 
   const [newsletterImages, setNewsletterImages] = useState<string[]>([]);
-  const [newNewsletterFile, setNewNewsletterFile] = useState<File | null>(null); // ไฟล์ใหม่ที่รออัปโหลด
+  const [selectedNewsletters, setSelectedNewsletters] = useState<number[]>([]); // เก็บ index จดหมายข่าวที่เลือก
+
+  // --- ระบบจัดการรูปภาพใหม่ (Files) ---
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newFilesPreview, setNewFilesPreview] = useState<string[]>([]);
+
+  const [newNewsletterFiles, setNewNewsletterFiles] = useState<File[]>([]);
+  const [newNewsletterPreview, setNewNewsletterPreview] = useState<string[]>(
+    [],
+  );
 
   const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
   const [currentLink, setCurrentLink] = useState({ label: "", url: "" });
@@ -93,92 +96,124 @@ export default function EditNewsPage({
     import("suneditor-react").then((mod) =>
       setSunEditorComponent(() => mod.default),
     );
-  }, []);
-
-  // Fetch Data
-  useEffect(() => {
     fetch(`/api/news/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setTitle(data.title);
         setContent(data.content);
-        if (data.categories && Array.isArray(data.categories)) {
-          setCategories(data.categories);
-        } else if (data.category) {
-          setCategories([data.category]);
-        } else {
-          setCategories(["PR"]);
-        }
+        setCategories(
+          Array.isArray(data.categories)
+            ? data.categories
+            : [data.category || "PR"],
+        );
         setImages(data.images || []);
         setNewsletterImages(data.announcementImages || []);
         setLinks(data.links || []);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        router.push("/dashboard/news");
       });
-  }, [id, router]);
+  }, [id]);
 
-  // Handlers
-  const toggleCategory = (value: string) => {
-    setCategories((prev) =>
-      prev.includes(value)
-        ? prev.length === 1
-          ? prev
-          : prev.filter((c) => c !== value)
-        : [...prev, value],
+  // --- 🛠️ Helper Functions ---
+  const compressImage = async (file: File) => {
+    const options = {
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    return await imageCompression(file, options);
+  };
+
+  // --- Logic: เลือก/ลบ รูปทั่วไป ---
+  const toggleSelectAllImages = () => {
+    if (selectedImages.length === images.length) setSelectedImages([]);
+    else setSelectedImages(images.map((_, i) => i));
+  };
+  const toggleSelectImage = (idx: number) => {
+    setSelectedImages((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
     );
   };
-
-  // จัดการรูปภาพทั่วไป (ลบของเก่า / เพิ่มของใหม่)
-  const handleDeleteImage = (index: number) =>
-    setImages(images.filter((_, i) => i !== index));
-  const handleNewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) setNewFile(e.target.files[0]);
+  const deleteSelectedImages = () => {
+    setImages((prev) => prev.filter((_, i) => !selectedImages.includes(i)));
+    setSelectedImages([]);
   };
 
-  // จัดการจดหมายข่าว (ลบของเก่า / เพิ่มของใหม่)
-  const handleDeleteNewsletter = (index: number) =>
-    setNewsletterImages(newsletterImages.filter((_, i) => i !== index));
-  const handleNewNewsletterChange = (
+  // --- Logic: เลือก/ลบ จดหมายข่าว ---
+  const toggleSelectAllNewsletters = () => {
+    if (selectedNewsletters.length === newsletterImages.length)
+      setSelectedNewsletters([]);
+    else setSelectedNewsletters(newsletterImages.map((_, i) => i));
+  };
+  const toggleSelectNewsletter = (idx: number) => {
+    setSelectedNewsletters((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
+    );
+  };
+  const deleteSelectedNewsletters = () => {
+    setNewsletterImages((prev) =>
+      prev.filter((_, i) => !selectedNewsletters.includes(i)),
+    );
+    setSelectedNewsletters([]);
+  };
+
+  // --- Logic: เพิ่มรูปใหม่ ---
+  const handleNewFilesChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    if (e.target.files?.[0]) setNewNewsletterFile(e.target.files[0]);
+    if (e.target.files) {
+      setIsCompressing(true);
+      const files = Array.from(e.target.files);
+      const compressed = await Promise.all(files.map((f) => compressImage(f)));
+      setNewFiles((prev) => [...prev, ...compressed]);
+      setNewFilesPreview((prev) => [
+        ...prev,
+        ...compressed.map((f) => URL.createObjectURL(f)),
+      ]);
+      setIsCompressing(false);
+    }
   };
 
-  const addLink = () => {
-    if (!currentLink.label || !currentLink.url) return alert("กรุณากรอกให้ครบ");
-    setLinks([...links, currentLink]);
-    setCurrentLink({ label: "", url: "" });
+  const handleNewNewsletterChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (e.target.files) {
+      setIsCompressing(true);
+      const files = Array.from(e.target.files);
+      const compressed = await Promise.all(files.map((f) => compressImage(f)));
+      setNewNewsletterFiles((prev) => [...prev, ...compressed]);
+      setNewNewsletterPreview((prev) => [
+        ...prev,
+        ...compressed.map((f) => URL.createObjectURL(f)),
+      ]);
+      setIsCompressing(false);
+    }
   };
-  const removeLink = (index: number) =>
-    setLinks(links.filter((_, i) => i !== index));
 
-  // Update Logic
+  // --- Submit Logic ---
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || isCompressing) return;
     setSubmitting(true);
 
     try {
-      // 1. อัปโหลดรูปใหม่ (ถ้ามี)
-      const finalImages = [...images];
-      if (newFile) {
-        const url = await uploadToCloudinary(newFile, "ktltc_news");
-        if (url) finalImages.push(url);
-      }
+      const uploadedNewsUrls = await Promise.all(
+        newFiles.map((f) => uploadToCloudinary(f, "ktltc_news")),
+      );
+      const uploadedNewsletterUrls = await Promise.all(
+        newNewsletterFiles.map((f) =>
+          uploadToCloudinary(f, "ktltc_newsletters"),
+        ),
+      );
 
-      const finalNewsletterImages = [...newsletterImages];
-      if (newNewsletterFile) {
-        const url = await uploadToCloudinary(
-          newNewsletterFile,
-          "ktltc_newsletters",
-        );
-        if (url) finalNewsletterImages.push(url);
-      }
+      const finalImages = [
+        ...images,
+        ...uploadedNewsUrls.filter((url) => url !== null),
+      ];
+      const finalNewsletters = [
+        ...newsletterImages,
+        ...uploadedNewsletterUrls.filter((url) => url !== null),
+      ];
 
-      // 2. ส่งข้อมูลอัปเดต
       const res = await fetch(`/api/news/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -187,21 +222,19 @@ export default function EditNewsPage({
           content,
           categories,
           images: finalImages,
-          announcementImages: finalNewsletterImages,
+          announcementImages: finalNewsletters,
           links,
         }),
       });
 
       if (res.ok) {
-        alert("✅ อัปเดตเรียบร้อย!");
+        alert("✅ แก้ไขข้อมูลเรียบร้อย");
         router.push("/dashboard/news");
         router.refresh();
-      } else {
-        alert("เกิดข้อผิดพลาด");
       }
     } catch (error) {
       console.error(error);
-      alert("เชื่อมต่อ Server ไม่ได้");
+      alert("เกิดข้อผิดพลาด");
     } finally {
       setSubmitting(false);
     }
@@ -210,393 +243,362 @@ export default function EditNewsPage({
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold">
-        กำลังโหลดข้อมูล...
+        กำลังโหลด...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-32 font-sans text-slate-800 relative">
+    <div className="min-h-screen bg-slate-50/50 pb-40 font-sans text-slate-800 antialiased">
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap");
         body {
           font-family: "Sarabun", sans-serif;
         }
-        .sun-editor-editable {
-          font-family: "Sarabun", sans-serif !important;
-        }
-        .sun-editor {
-          border-radius: 0.75rem;
-          border: 1px solid #e2e8f0 !important;
-          overflow: hidden;
-        }
       `}</style>
 
       {/* --- Top Bar --- */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm backdrop-blur-md bg-white/80">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/news"
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-            </Link>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">แก้ไขข่าวสาร</h1>
-              <p className="text-xs text-slate-500">
-                ปรับปรุงข้อมูลข่าวประชาสัมพันธ์
-              </p>
-            </div>
-          </div>
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 flex items-center justify-between backdrop-blur-md">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/news"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all"
+          >
+            ←
+          </Link>
+          <h1 className="text-xl font-bold">แก้ไขข่าวสาร</h1>
         </div>
+        {isCompressing && (
+          <span className="text-blue-600 text-xs font-black animate-pulse bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+            ⏳ กำลังย่อขนาดรูปภาพใหม่...
+          </span>
+        )}
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         {/* --- Card 1: ข้อมูลหลัก --- */}
-        <section className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-          <div className="flex items-center gap-3 mb-6">
+        <section className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
-              ✏️
+              📝
             </div>
             <h2 className="text-lg font-bold text-slate-700">รายละเอียดข่าว</h2>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-500 ml-1">
-                หัวข้อข่าว
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-lg font-semibold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all"
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
+              หัวข้อข่าวสาร
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-lg font-bold focus:bg-white focus:border-amber-500 outline-none transition-all shadow-sm"
+              placeholder="ระบุหัวข้อข่าว..."
+            />
+          </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-slate-500 ml-1">
-                หมวดหมู่
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {CATEGORIES.map((cat) => {
-                  const isSelected = categories.includes(cat.value);
-                  return (
-                    <div
-                      key={cat.value}
-                      onClick={() => toggleCategory(cat.value)}
-                      className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 group overflow-hidden ${
-                        isSelected
-                          ? `${cat.color} ring-2 ring-offset-1 ring-blue-100`
-                          : "bg-white border-slate-100 text-slate-500 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 relative z-10">
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? "border-current bg-current" : "border-slate-300"}`}
-                        >
-                          {isSelected && (
-                            <svg
-                              className="w-3 h-3 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={4}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-bold text-sm">{cat.label}</span>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-current opacity-[0.03]" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
+              หมวดหมู่
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {CATEGORIES.map((cat) => (
+                <div
+                  key={cat.value}
+                  onClick={() =>
+                    setCategories((prev) =>
+                      prev.includes(cat.value)
+                        ? prev.filter((c) => c !== cat.value)
+                        : [...prev, cat.value],
+                    )
+                  }
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-center font-bold text-sm ${categories.includes(cat.value) ? cat.color : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                >
+                  {cat.label}
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-500 ml-1">
-                เนื้อหาข่าว
-              </label>
-              <div className="rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                {SunEditorComponent ? (
-                  <SunEditorComponent
-                    setContents={content}
-                    onChange={setContent}
-                    height="400px"
-                    setOptions={{
-                      font: fontList,
-                      buttonList: [
-                        ["undo", "redo"],
-                        ["font", "fontSize", "formatBlock"],
-                        [
-                          "bold",
-                          "underline",
-                          "italic",
-                          "strike",
-                          "fontColor",
-                          "hiliteColor",
-                        ],
-                        [
-                          "removeFormat",
-                          "outdent",
-                          "indent",
-                          "align",
-                          "list",
-                          "lineHeight",
-                          "horizontalRule",
-                        ],
-                        [
-                          "table",
-                          "link",
-                          "image",
-                          "video",
-                          "fullScreen",
-                          "showBlocks",
-                          "codeView",
-                        ],
-                      ],
-                      defaultTag: "div",
-                      minHeight: "400px",
-                    }}
-                  />
-                ) : (
-                  <div className="h-[400px] flex items-center justify-center bg-slate-50 text-slate-400 animate-pulse">
-                    กำลังโหลด...
-                  </div>
-                )}
-              </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
+              เนื้อหาข่าว (Rich Text)
+            </label>
+            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              {SunEditorComponent && (
+                <SunEditorComponent
+                  setContents={content}
+                  onChange={setContent}
+                  height="400px"
+                  setOptions={{
+                    font: fontList,
+                    buttonList: [
+                      ["undo", "redo"],
+                      ["font", "fontSize", "formatBlock"],
+                      ["bold", "underline", "italic", "strike"],
+                      ["fontColor", "hiliteColor"],
+                      ["table", "link", "image", "video"],
+                      ["fullScreen", "codeView"],
+                    ],
+                  }}
+                />
+              )}
             </div>
           </div>
         </section>
 
         {/* --- Card 2: รูปภาพทั่วไป --- */}
-        <section className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
-                🖼️
-              </span>
-              รูปภาพทั่วไป
-            </h3>
-            <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-md">
-              แนวนอน
-            </span>
-          </div>
-
-          {/* แสดงรูปเดิม */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            {images.map((img, idx) => (
-              <div
-                key={idx}
-                className="relative aspect-video rounded-xl overflow-hidden shadow-sm group border border-slate-200"
-              >
-                <Image src={img} alt="img" fill className="object-cover" />
+        <section className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 className="font-bold text-slate-700 flex items-center gap-2 text-lg">
+              🖼️ รูปภาพทั่วไป (แนวนอน)
+            </h2>
+            <div className="flex gap-2 w-full md:w-auto">
+              {images.length > 0 && (
                 <button
-                  onClick={() => handleDeleteImage(idx)}
-                  className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all"
+                  type="button"
+                  onClick={toggleSelectAllImages}
+                  className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600"
                 >
-                  ×
+                  {selectedImages.length === images.length
+                    ? "✕ ยกเลิกการเลือก"
+                    : "✓ เลือกทั้งหมด"}
                 </button>
-              </div>
-            ))}
-            {/* ช่องอัปโหลดเพิ่ม */}
-            <div className="relative group cursor-pointer aspect-video border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-all flex flex-col items-center justify-center overflow-hidden">
-              <input
-                type="file"
-                accept="image/*"
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                onChange={handleNewFileChange}
-              />
-              {newFile ? (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={URL.createObjectURL(newFile)}
-                    alt="new"
-                    fill
-                    className="object-cover opacity-80"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-bold">
-                    รออัปโหลด
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-1 text-blue-500">
-                    +
-                  </div>
-                  <span className="text-xs font-bold text-slate-500">
-                    เพิ่มรูปใหม่
-                  </span>
-                </>
+              )}
+              {selectedImages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={deleteSelectedImages}
+                  className="flex-1 md:flex-none bg-red-500 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg shadow-red-200 animate-pulse"
+                >
+                  ลบที่เลือก ({selectedImages.length})
+                </button>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {images.map((img, idx) => (
+              <div
+                key={`old-img-${idx}`}
+                onClick={() => toggleSelectImage(idx)}
+                className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer border-4 transition-all ${selectedImages.includes(idx) ? "border-red-500 scale-90" : "border-slate-100 shadow-sm hover:border-blue-200"}`}
+              >
+                <Image src={img} alt="old" fill className="object-cover" />
+                {selectedImages.includes(idx) && (
+                  <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center text-white font-black text-2xl drop-shadow-md">
+                    ✓
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {newFilesPreview.map((src, idx) => (
+              <div
+                key={`new-img-${idx}`}
+                className="relative aspect-video rounded-xl overflow-hidden border-4 border-blue-400 shadow-md group"
+              >
+                <Image src={src} alt="new" fill className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewFiles(newFiles.filter((_, i) => i !== idx));
+                    setNewFilesPreview(
+                      newFilesPreview.filter((_, i) => i !== idx),
+                    );
+                  }}
+                  className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold"
+                >
+                  ยกเลิกรูปนี้
+                </button>
+                <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">
+                  New
+                </div>
+              </div>
+            ))}
+
+            <label className="aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleNewFilesChange}
+              />
+              <span className="text-xl text-slate-400">+</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase">
+                Add More
+              </span>
+            </label>
           </div>
         </section>
 
         {/* --- Card 3: จดหมายข่าว --- */}
-        <section className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-700 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">
-                📜
-              </span>
-              จดหมายข่าว
-            </h3>
-            <span className="text-xs font-medium bg-purple-50 text-purple-600 px-2 py-1 rounded-md">
-              แนวตั้ง
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            {newsletterImages.map((img, idx) => (
-              <div
-                key={idx}
-                className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm group border border-slate-200 bg-slate-100"
-              >
-                <Image
-                  src={img}
-                  alt="newsletter"
-                  fill
-                  className="object-contain"
-                />
+        <section className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 className="font-bold text-slate-700 flex items-center gap-2 text-lg">
+              📜 จดหมายข่าว (แนวตั้ง)
+            </h2>
+            <div className="flex gap-2 w-full md:w-auto">
+              {newsletterImages.length > 0 && (
                 <button
-                  onClick={() => handleDeleteNewsletter(idx)}
-                  className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all"
+                  type="button"
+                  onClick={toggleSelectAllNewsletters}
+                  className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600"
                 >
-                  ×
+                  {selectedNewsletters.length === newsletterImages.length
+                    ? "✕ ยกเลิกทั้งหมด"
+                    : "✓ เลือกทั้งหมด"}
                 </button>
-              </div>
-            ))}
-
-            <div className="relative group cursor-pointer aspect-[3/4] border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-purple-50 hover:border-purple-400 transition-all flex flex-col items-center justify-center overflow-hidden">
-              <input
-                type="file"
-                accept="image/*"
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                onChange={handleNewNewsletterChange}
-              />
-              {newNewsletterFile ? (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={URL.createObjectURL(newNewsletterFile)}
-                    alt="new"
-                    fill
-                    className="object-contain opacity-80"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-bold">
-                    รออัปโหลด
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-1 text-purple-500">
-                    +
-                  </div>
-                  <span className="text-xs font-bold text-slate-500">
-                    เพิ่มรูปใหม่
-                  </span>
-                </>
+              )}
+              {selectedNewsletters.length > 0 && (
+                <button
+                  type="button"
+                  onClick={deleteSelectedNewsletters}
+                  className="flex-1 md:flex-none bg-red-500 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg shadow-red-200 animate-pulse"
+                >
+                  ลบที่เลือก ({selectedNewsletters.length})
+                </button>
               )}
             </div>
           </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {newsletterImages.map((img, idx) => (
+              <div
+                key={`old-nl-${idx}`}
+                onClick={() => toggleSelectNewsletter(idx)}
+                className={`relative aspect-3/4 rounded-xl overflow-hidden cursor-pointer border-4 bg-slate-50 transition-all ${selectedNewsletters.includes(idx) ? "border-red-500 scale-90" : "border-slate-100 shadow-sm hover:border-purple-200"}`}
+              >
+                <Image src={img} alt="old-nl" fill className="object-contain" />
+                {selectedNewsletters.includes(idx) && (
+                  <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center text-white font-black text-2xl drop-shadow-md">
+                    ✓
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {newNewsletterPreview.map((src, idx) => (
+              <div
+                key={`new-nl-${idx}`}
+                className="relative aspect-3/4 rounded-xl overflow-hidden border-4 border-purple-400 shadow-md bg-slate-50 group"
+              >
+                <Image src={src} alt="new-nl" fill className="object-contain" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewNewsletterFiles(
+                      newNewsletterFiles.filter((_, i) => i !== idx),
+                    );
+                    setNewNewsletterPreview(
+                      newNewsletterPreview.filter((_, i) => i !== idx),
+                    );
+                  }}
+                  className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold"
+                >
+                  ยกเลิก
+                </button>
+                <div className="absolute top-1 left-1 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">
+                  New
+                </div>
+              </div>
+            ))}
+
+            <label className="aspect-3/4 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleNewNewsletterChange}
+              />
+              <span className="text-xl text-slate-400">+</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase">
+                Add More
+              </span>
+            </label>
+          </div>
         </section>
 
-        {/* --- Card 4: ลิงก์ --- */}
-        <section className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
-              🔗
-            </div>
-            <h2 className="text-lg font-bold text-slate-700">ลิงก์ภายนอก</h2>
-          </div>
-
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3">
+        {/* --- Card 4: ลิงก์ภายนอก --- */}
+        <section className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-4 pb-12">
+          <h2 className="font-bold text-slate-700 flex items-center gap-2 text-lg">
+            🔗 ลิงก์ภายนอก / เอกสารแนบ
+          </h2>
+          <div className="flex flex-col md:flex-row gap-3">
             <input
-              placeholder="ชื่อปุ่ม"
+              placeholder="ชื่อปุ่ม (เช่น ดาวน์โหลด PDF)"
               value={currentLink.label}
               onChange={(e) =>
                 setCurrentLink({ ...currentLink, label: e.target.value })
               }
-              className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"
+              className="flex-1 bg-slate-50 p-4 rounded-2xl outline-none border border-slate-200 focus:bg-white focus:border-indigo-500 transition-all"
             />
             <input
-              placeholder="URL"
+              placeholder="URL ลิงก์"
               value={currentLink.url}
               onChange={(e) =>
                 setCurrentLink({ ...currentLink, url: e.target.value })
               }
-              className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none font-mono"
+              className="flex-1 bg-slate-50 p-4 rounded-2xl outline-none border border-slate-200 focus:bg-white focus:border-indigo-500 transition-all font-mono text-sm"
             />
             <button
               type="button"
-              onClick={addLink}
-              className="bg-slate-800 text-white px-6 rounded-xl font-bold text-sm"
+              onClick={() => {
+                if (currentLink.label && currentLink.url) {
+                  setLinks([...links, currentLink]);
+                  setCurrentLink({ label: "", url: "" });
+                }
+              }}
+              className="bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg shadow-slate-200"
             >
-              + เพิ่ม
+              + เพิ่มลิงก์
             </button>
           </div>
-
-          {links.length > 0 && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-              {links.map((l, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between bg-white border border-slate-200 p-3 pl-4 rounded-xl shadow-sm"
-                >
-                  <span className="font-bold text-sm text-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            {links.map((l, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-200 transition-colors group"
+              >
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-bold text-slate-700 truncate">
                     {l.label}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => removeLink(i)}
-                    className="text-red-500"
-                  >
-                    ×
-                  </button>
+                  <span className="text-[10px] text-slate-400 font-mono truncate">
+                    {l.url}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => setLinks(links.filter((_, idx) => idx !== i))}
+                  className="text-red-400 hover:text-red-600 w-8 h-8 rounded-full hover:bg-red-50 transition-all flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
 
-      {/* --- Sticky Bottom Action Bar --- */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-50 flex justify-center shadow-2xl">
+      {/* --- Floating Bottom Bar --- */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-slate-200 flex justify-center z-40 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
         <div className="max-w-5xl w-full flex gap-4">
           <Link
             href="/dashboard/news"
-            className="px-8 py-3 rounded-full border-2 border-slate-200 font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all text-center min-w-[140px]"
+            className="px-10 py-4 rounded-full border-2 border-slate-200 font-bold text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all text-center min-w-35"
           >
             ยกเลิก
           </Link>
           <button
             onClick={handleUpdate}
-            disabled={submitting}
-            className={`flex-1 py-3 rounded-full font-bold text-lg shadow-lg shadow-amber-500/30 transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2
-                ${submitting ? "bg-slate-300 text-slate-500 cursor-not-allowed" : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-amber-500/50"}`}
+            disabled={submitting || isCompressing}
+            className={`flex-1 py-4 rounded-full font-bold text-white shadow-xl shadow-amber-500/20 transition-all ${submitting || isCompressing ? "bg-slate-300 cursor-not-allowed" : "bg-linear-to-r from-amber-500 to-orange-600 hover:scale-[1.02] active:scale-100 hover:shadow-amber-500/40"}`}
           >
-            {submitting ? "⏳ กำลังบันทึก..." : "💾 บันทึกการแก้ไข"}
+            {submitting
+              ? "⏳ กำลังบันทึกข้อมูลล่าสุด..."
+              : "💾 บันทึกการแก้ไขข่าวสาร"}
           </button>
         </div>
       </div>
