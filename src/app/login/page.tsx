@@ -69,6 +69,7 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-zinc-950/80 border border-zinc-800 text-white p-4 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-zinc-700"
               placeholder="กรอกชื่อผู้ใช้งาน"
+              autoComplete="current-password"
             />
           </div>
 
@@ -82,6 +83,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-zinc-950/80 border border-zinc-800 text-white p-4 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-zinc-700"
               placeholder="กรอกรหัสผ่าน"
+              autoComplete="current-password"
             />
           </div>
 

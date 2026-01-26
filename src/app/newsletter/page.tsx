@@ -65,8 +65,8 @@ export default async function NewsletterPage() {
         {newsletters.length > 0 ? (
           <>
             {/* ✅ ปรับ Grid ให้แสดง 3 คอลัมน์ ตั้งแต่หน้าจอขนาดกลาง (md) ขึ้นไป */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
-              {newsletters.map((news) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              {newsletters.map((news, index) => {
                 // Logic เลือกรูปภาพ: ใช้รูปประกาศเป็นปกก่อน ถ้าไม่มีค่อยใช้รูปทั่วไป
                 const coverImage =
                   news.announcementImages && news.announcementImages.length > 0
@@ -82,7 +82,7 @@ export default async function NewsletterPage() {
                     className="group relative block rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 hover:-translate-y-2 h-full" // เพิ่ม h-full เพื่อให้การ์ดสูงเท่ากัน
                   >
                     {/* Image Area */}
-                    <div className="relative aspect-3/4 w-full bg-slate-100 overflow-hidden">
+                    <div className="relative aspect-[3/4] w-full bg-slate-100 overflow-hidden">
                       {/* Date Badge */}
                       <div className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur shadow-md px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs font-bold text-slate-600">
                         <svg
@@ -109,6 +109,9 @@ export default async function NewsletterPage() {
                         src={coverImage}
                         alt={news.title}
                         fill
+                        // ✅ FIX: เพิ่ม sizes เพื่อแก้ Warning และเพิ่ม Performance
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={index === 0}
                         className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                       />
 

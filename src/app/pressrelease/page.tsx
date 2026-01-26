@@ -82,6 +82,7 @@ export default async function PressRelease() {
                     src={news.images?.[0] || "/no-image.png"}
                     alt={news.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>

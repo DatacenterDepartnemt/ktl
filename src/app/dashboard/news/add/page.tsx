@@ -1,19 +1,48 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { uploadToCloudinary } from "@/lib/upload";
-import dynamic from "next/dynamic";
+import imageCompression from "browser-image-compression"; // ✅ พระเอกของเรา
 import "suneditor/dist/css/suneditor.min.css";
 
-// ✅ Cast type เป็น any เพื่อแก้ปัญหา TypeScript กับ SunEditor
-const SunEditor = dynamic(() => import("suneditor-react"), {
-  ssr: false,
-});
+// --- Config ---
+const CATEGORIES = [
+  {
+    value: "PR",
+    label: "ข่าวประชาสัมพันธ์",
+    color: "bg-blue-50 text-blue-600 border-blue-200",
+  },
+  {
+    value: "Newsletter",
+    label: "จดหมายข่าว",
+    color: "bg-purple-50 text-purple-600 border-purple-200",
+  },
+  {
+    value: "Internship",
+    label: "ฝึกงาน/ประสบการณ์",
+    color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+  },
+  {
+    value: "Announcement",
+    label: "ข่าวประกาศ",
+    color: "bg-orange-50 text-orange-600 border-orange-200",
+  },
+  {
+    value: "Bidding",
+    label: "ประกวดราคา",
+    color: "bg-pink-50 text-pink-600 border-pink-200",
+  },
+  {
+    value: "Order",
+    label: "คำสั่งวิทยาลัย",
+    color: "bg-indigo-50 text-indigo-600 border-indigo-200",
+  },
+];
 
-// รายชื่อฟอนต์ (ถ้าต้องการให้เหมือนหน้า Edit)
 const fontList = [
   "Sarabun",
   "Kanit",
@@ -34,433 +63,637 @@ const fontList = [
   "Verdana",
 ];
 
-const CATEGORIES = [
-  { value: "PR", label: "ข่าวประชาสัมพันธ์" },
-  { value: "Newsletter", label: "จดหมายข่าวประชาสัมพันธ์" },
-  { value: "Internship", label: "นักศึกษาออกฝึกประสบการณ์" },
-  { value: "Announcement", label: "ข่าวประกาศ" },
-  { value: "Bidding", label: "ข่าวประกวดราคา" },
-  { value: "Order", label: "คำสั่งวิทยาลัยเทคนิค" },
-];
-
 export default function AddNewsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // ใช้ loading แทน submitting ให้สื่อความหมายเดียวกัน
 
+  // --- States ---
   const [title, setTitle] = useState("");
   const [categories, setCategories] = useState<string[]>(["PR"]);
   const [content, setContent] = useState("");
 
-  // --- 1. รูปภาพทั่วไป ---
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  // --- ✅ 2. รูปภาพจดหมายข่าว ---
-  const [newsletterImages, setNewsletterImages] = useState<string[]>([]);
+  const [newsletterFiles, setNewsletterFiles] = useState<File[]>([]);
+  const [newsletterPreviews, setNewsletterPreviews] = useState<string[]>([]);
 
   const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
   const [currentLink, setCurrentLink] = useState({ label: "", url: "" });
 
-  // Helper: จัดการหมวดหมู่
-  const toggleCategory = (value: string) => {
-    setCategories((prev) => {
-      if (prev.includes(value)) {
-        if (prev.length === 1) return prev;
-        return prev.filter((c) => c !== value);
-      } else {
-        return [...prev, value];
-      }
-    });
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false); // ✅ สถานะกำลังบีบอัด
 
-  // Helper: อัปโหลดรูปภาพหลายไฟล์
-  const handleUploadFiles = async (files: FileList, folder: string) => {
-    setLoading(true);
-    const urls: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const url = await uploadToCloudinary(file, folder);
-      if (url) urls.push(url);
+  // Editor Loader
+  const [SunEditorComponent, setSunEditorComponent] =
+    useState<React.ComponentType<any> | null>(null);
+  useEffect(() => {
+    import("suneditor-react").then((mod) =>
+      setSunEditorComponent(() => mod.default),
+    );
+  }, []);
+
+  // --- 🛠️ Helper: ฟังก์ชันบีบอัดรูป ---
+  const compressImage = async (file: File) => {
+    const options = {
+      maxSizeMB: 0.8, // บีบให้ไม่เกิน 0.8 MB (800KB)
+      maxWidthOrHeight: 1920, // ย่อขนาดภาพไม่เกิน Full HD
+      useWebWorker: true, // ใช้ Web Worker เพื่อไม่ให้หน้าเว็บค้าง
+    };
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      console.error("Compression Error:", error);
+      return file; // ถ้าบีบไม่ได้ ให้ใช้ไฟล์เดิม
     }
-    setLoading(false);
-    return urls;
   };
 
-  // --- Handlers: รูปทั่วไป ---
+  // --- Handlers ---
+  const toggleCategory = (value: string) => {
+    setCategories((prev) =>
+      prev.includes(value)
+        ? prev.length === 1
+          ? prev
+          : prev.filter((c) => c !== value)
+        : [...prev, value],
+    );
+  };
+
+  // ✅ Handler: รูปทั่วไป (พร้อมบีบอัด)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImgs = await handleUploadFiles(e.target.files, "ktltc_news");
-      setImages((prev) => [...prev, ...newImgs]);
+      setIsCompressing(true);
+      const originalFiles = Array.from(e.target.files);
+
+      // บีบอัดทีละไฟล์
+      const compressedFiles = await Promise.all(
+        originalFiles.map((file) => compressImage(file)),
+      );
+
+      setImageFiles((prev) => [...prev, ...compressedFiles]);
+      setImagePreviews((prev) => [
+        ...prev,
+        ...compressedFiles.map((f) => URL.createObjectURL(f)),
+      ]);
+      setIsCompressing(false);
     }
   };
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // --- Handlers: รูปจดหมายข่าว ---
-  const handleNewsletterImageChange = async (
+  // ✅ Handler: จดหมายข่าว (พร้อมบีบอัด)
+  const handleNewsletterChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImgs = await handleUploadFiles(
-        e.target.files,
-        "ktltc_newsletter",
+      setIsCompressing(true);
+      const originalFiles = Array.from(e.target.files);
+
+      const compressedFiles = await Promise.all(
+        originalFiles.map((file) => compressImage(file)),
       );
-      setNewsletterImages((prev) => [...prev, ...newImgs]);
+
+      setNewsletterFiles((prev) => [...prev, ...compressedFiles]);
+      setNewsletterPreviews((prev) => [
+        ...prev,
+        ...compressedFiles.map((f) => URL.createObjectURL(f)),
+      ]);
+      setIsCompressing(false);
     }
   };
-  const removeNewsletterImage = (index: number) => {
-    setNewsletterImages(newsletterImages.filter((_, i) => i !== index));
+  const removeNewsletter = (index: number) => {
+    setNewsletterFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewsletterPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // --- Handlers: ลิงก์ ---
   const addLink = () => {
-    if (currentLink.label.trim() === "" || currentLink.url.trim() === "") {
-      alert("กรุณากรอกชื่อปุ่มและลิงก์ให้ครบถ้วน");
-      return;
-    }
+    if (!currentLink.label || !currentLink.url)
+      return alert("กรุณากรอกข้อมูลลิงก์ให้ครบ");
     setLinks([...links, currentLink]);
     setCurrentLink({ label: "", url: "" });
   };
-  const removeLink = (index: number) => {
+  const removeLink = (index: number) =>
     setLinks(links.filter((_, i) => i !== index));
-  };
 
-  // --- Submit ---
+  // --- Submit Logic ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
-
-    setLoading(true);
+    if (isLoading || isCompressing) return; // ห้ามกดถ้ากำลังบีบอัด
+    setIsLoading(true);
 
     try {
+      const generalUploads = await Promise.all(
+        imageFiles.map((f) => uploadToCloudinary(f, "ktltc_news")),
+      );
+      const newsletterUploads = await Promise.all(
+        newsletterFiles.map((f) => uploadToCloudinary(f, "ktltc_newsletters")),
+      );
+
+      const validImages = generalUploads.filter(
+        (url) => url !== null,
+      ) as string[];
+      const validNewsletter = newsletterUploads.filter(
+        (url) => url !== null,
+      ) as string[];
+
+      const payload = {
+        title,
+        categories,
+        content,
+        images: validImages,
+        announcementImages: validNewsletter,
+        links,
+      };
+
+      const sizeInKB = (
+        new Blob([JSON.stringify(payload)]).size / 1024
+      ).toFixed(2);
+      console.log(`📊 Payload Size: ${sizeInKB} KB`);
+
       const res = await fetch("/api/news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          categories,
-          content,
-          images,
-          announcementImages: newsletterImages, // ✅ ส่งฟิลด์ใหม่
-          links,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("✅ บันทึกข่าวเรียบร้อยแล้ว!");
-        router.refresh();
+        alert(`บันทึกสำเร็จ! (ใช้พื้นที่เพียง ${sizeInKB} KB)`);
         router.push("/dashboard/news");
+        router.refresh();
       } else {
-        const errorData = await res.json();
-        alert(errorData.error || "เกิดข้อผิดพลาด");
+        alert("เกิดข้อผิดพลาดในการบันทึก");
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       alert("เชื่อมต่อ Server ไม่ได้");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full p-6 md:p-10 text-zinc-800">
+    <div className="min-h-screen bg-slate-50/50 pb-32 font-sans text-slate-800 relative">
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap");
+        body {
+          font-family: "Sarabun", sans-serif;
+        }
         .sun-editor-editable {
           font-family: "Sarabun", sans-serif !important;
         }
+        .sun-editor {
+          border-radius: 0.75rem;
+          border: 1px solid #e2e8f0 !important;
+          overflow: hidden;
+        }
       `}</style>
 
-      <div className="">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8 border-b border-zinc-200 pb-6">
-          <Link
-            href="/dashboard/news"
-            className="text-zinc-500 hover:text-blue-600 font-bold transition-colors"
-          >
-            ← กลับ
-          </Link>
-          <h1 className="text-3xl font-black text-zinc-900">สร้างข่าวใหม่</h1>
+      {/* --- Top Bar --- */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm backdrop-blur-md bg-white/80">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard/news"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800">
+                สร้างข่าวใหม่
+              </h1>
+              <p className="text-xs text-slate-500">
+                กรอกข้อมูลเพื่อประชาสัมพันธ์
+              </p>
+            </div>
+          </div>
+          {/* สถานะบีบอัด */}
+          {isCompressing && (
+            <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-bold border border-blue-100 animate-pulse">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              กำลังบีบอัดรูป...
+            </div>
+          )}
         </div>
+      </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100 space-y-10"
-        >
-          {/* --- Section 1: ข้อมูลหลัก --- */}
+      <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+        {/* --- Card 1: ข้อมูลหลัก --- */}
+        <section className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+              📝
+            </div>
+            <h2 className="text-lg font-bold text-slate-700">รายละเอียดข่าว</h2>
+          </div>
+
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3">
-              ข้อมูลข่าวสารทั่วไป
-            </h2>
-
             <div className="space-y-2">
-              <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">
+              <label className="text-sm font-semibold text-slate-500 ml-1">
                 หัวข้อข่าว
               </label>
               <input
-                type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white border-2 border-zinc-100 focus:border-blue-500 rounded-xl p-4 text-zinc-900 font-medium outline-none transition-all"
-                placeholder="พิมพ์หัวข้อข่าวที่นี่..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-lg font-semibold text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-slate-400"
+                placeholder="เช่น ประกาศรับสมัครนักศึกษา..."
                 required
               />
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">
-                เลือกหมวดหมู่
+              <label className="text-sm font-semibold text-slate-500 ml-1">
+                หมวดหมู่
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {CATEGORIES.map((cat) => {
                   const isSelected = categories.includes(cat.value);
                   return (
                     <div
                       key={cat.value}
                       onClick={() => toggleCategory(cat.value)}
-                      className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 group overflow-hidden ${
                         isSelected
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-zinc-100 bg-white text-zinc-600 hover:border-zinc-300"
+                          ? `${cat.color} ring-2 ring-offset-1 ring-blue-100`
+                          : "bg-white border-slate-100 text-slate-500 hover:border-slate-300"
                       }`}
                     >
-                      <div
-                        className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${isSelected ? "bg-blue-600 border-blue-600" : "bg-white border-zinc-300"}`}
-                      >
-                        {isSelected && (
-                          <svg
-                            className="w-3.5 h-3.5 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={3}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
+                      <div className="flex items-center gap-3 relative z-10">
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? "border-current bg-current" : "border-slate-300"}`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={4}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="font-bold text-sm">{cat.label}</span>
                       </div>
-                      <span className="font-bold text-sm">{cat.label}</span>
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-current opacity-[0.03]" />
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
 
-          <hr className="border-zinc-100" />
-
-          {/* --- Section 2: เนื้อหาข่าว --- */}
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3 mb-4">
-              เนื้อหาข่าว
-            </h2>
-            <div className="rounded-xl overflow-hidden border-2 border-zinc-100 sun-editor-wrapper">
-              <SunEditor
-                setContents={content}
-                onChange={setContent}
-                placeholder="พิมพ์เนื้อหาข่าว หรือวางข้อความที่นี่..."
-                height="400px"
-                setOptions={{
-                  font: fontList,
-                  buttonList: [
-                    ["undo", "redo"],
-                    ["font", "fontSize", "formatBlock"],
-                    ["bold", "underline", "italic", "strike"],
-                    ["fontColor", "hiliteColor"],
-                    ["removeFormat"],
-                    ["outdent", "indent"],
-                    ["align", "horizontalRule", "list", "lineHeight"],
-                    ["table", "link", "image", "video"],
-                    ["fullScreen", "showBlocks", "codeView"],
-                  ],
-                  defaultTag: "div",
-                  minHeight: "400px",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* --- Section 3: ลิงก์ --- */}
-          <div className="space-y-4 pt-4 border-t border-dashed border-zinc-200">
-            <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-              ลิงก์ภายนอก / ดาวน์โหลดเอกสาร (Optional)
-            </label>
-            <div className="flex flex-col md:flex-row gap-3">
-              <input
-                type="text"
-                placeholder="ชื่อปุ่ม"
-                value={currentLink.label}
-                onChange={(e) =>
-                  setCurrentLink({ ...currentLink, label: e.target.value })
-                }
-                className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500"
-              />
-              <input
-                type="url"
-                placeholder="URL"
-                value={currentLink.url}
-                onChange={(e) =>
-                  setCurrentLink({ ...currentLink, url: e.target.value })
-                }
-                className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500"
-              />
-              <button
-                type="button"
-                onClick={addLink}
-                className="bg-zinc-800 hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors whitespace-nowrap"
-              >
-                + เพิ่มลิงก์
-              </button>
-            </div>
-
-            {links.length > 0 && (
-              <div className="space-y-2">
-                {links.map((link, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-blue-50 border border-blue-100 p-3 rounded-xl"
-                  >
-                    <span className="text-sm font-bold text-zinc-700">
-                      {link.label}{" "}
-                      <span className="text-xs text-zinc-400 font-normal">
-                        ({link.url})
-                      </span>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-500 ml-1">
+                เนื้อหาข่าว (Rich Text)
+              </label>
+              <div className="rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                {SunEditorComponent ? (
+                  <SunEditorComponent
+                    setContents={content}
+                    onChange={setContent}
+                    height="400px"
+                    setOptions={{
+                      font: fontList,
+                      buttonList: [
+                        ["undo", "redo"],
+                        ["font", "fontSize", "formatBlock"],
+                        [
+                          "bold",
+                          "underline",
+                          "italic",
+                          "strike",
+                          "fontColor",
+                          "hiliteColor",
+                        ],
+                        [
+                          "removeFormat",
+                          "outdent",
+                          "indent",
+                          "align",
+                          "list",
+                          "lineHeight",
+                          "horizontalRule",
+                        ],
+                        [
+                          "table",
+                          "link",
+                          "image",
+                          "video",
+                          "fullScreen",
+                          "showBlocks",
+                          "codeView",
+                        ],
+                      ],
+                      defaultTag: "div",
+                      minHeight: "400px",
+                    }}
+                  />
+                ) : (
+                  <div className="h-[400px] flex flex-col gap-3 items-center justify-center bg-slate-50 text-slate-400 animate-pulse">
+                    <div className="w-8 h-8 border-4 border-slate-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    <span className="text-sm font-medium">
+                      กำลังโหลดเครื่องมือเขียน...
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => removeLink(index)}
-                      className="text-red-500 hover:bg-red-100 w-8 h-8 rounded-lg transition-colors"
-                    >
-                      ×
-                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <hr className="border-zinc-100" />
-
-          {/* --- Section 4: รูปภาพทั่วไป --- */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3">
-              รูปภาพประกอบ (ทั่วไป)
-            </h2>
-            <div className="relative w-full h-32 border-2 border-dashed border-zinc-300 bg-zinc-50 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
-              <div className="flex flex-col items-center justify-center h-full text-zinc-400 group-hover:text-blue-500">
-                {loading ? (
-                  <span className="font-bold text-sm animate-pulse">
-                    กำลังอัปโหลดรูปภาพ...
-                  </span>
-                ) : (
-                  <span className="font-bold text-sm">
-                    + คลิกเพื่อเพิ่มรูปภาพทั่วไป
-                  </span>
                 )}
               </div>
             </div>
+          </div>
+        </section>
 
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                {images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 shadow-sm group"
-                  >
-                    <Image src={img} fill alt="" className="object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* --- Card 2: รูปภาพทั่วไป --- */}
+        <section className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-700 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
+                🖼️
+              </span>
+              รูปภาพทั่วไป
+            </h3>
+            <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-md">
+              แนวนอน
+            </span>
           </div>
 
-          <hr className="border-zinc-100" />
-
-          {/* --- Section 5: รูปจดหมายข่าว --- */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-orange-500 pl-3">
-              รูปภาพสำหรับจดหมายข่าว
-            </h2>
-            <div className="relative w-full h-32 border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleNewsletterImageChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
-              <div className="flex flex-col items-center justify-center h-full text-orange-400 group-hover:text-orange-600">
-                {loading ? (
-                  <span className="font-bold text-sm animate-pulse">
-                    กำลังอัปโหลดรูปภาพ...
-                  </span>
-                ) : (
-                  <span className="font-bold text-sm">
-                    + คลิกเพื่อเพิ่มรูปจดหมายข่าว
-                  </span>
-                )}
-              </div>
+          <div className="relative group cursor-pointer min-h-[160px] border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-all flex flex-col items-center justify-center mb-6 overflow-hidden">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              onChange={handleImageChange}
+            />
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <svg
+                className="w-6 h-6 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
             </div>
-
-            {newsletterImages.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                {newsletterImages.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative aspect-3/4 rounded-xl overflow-hidden border border-orange-200 shadow-sm bg-white group"
-                  >
-                    <Image src={img} fill alt="" className="object-contain" />
-                    <button
-                      type="button"
-                      onClick={() => removeNewsletterImage(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <span className="text-sm font-bold text-slate-600 group-hover:text-blue-600">
+              คลิกเพิ่มรูปภาพ
+            </span>
+            <span className="text-xs text-slate-400 mt-1">
+              หรือลากไฟล์มาวางที่นี่
+            </span>
           </div>
 
-          {/* --- Buttons --- */}
-          <div className="flex items-center gap-4 pt-6 border-t border-zinc-100">
-            <Link
-              href="/dashboard/news"
-              className="px-6 py-3 rounded-xl border-2 border-zinc-200 text-zinc-500 font-bold hover:bg-zinc-50 transition-colors"
-            >
-              ยกเลิก
-            </Link>
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 animate-fade-in-up">
+              {imagePreviews.map((src, i) => (
+                <div
+                  key={i}
+                  className="relative aspect-video rounded-xl overflow-hidden shadow-sm group/img border border-slate-200"
+                >
+                  <Image
+                    src={src}
+                    alt="preview"
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    onClick={() => removeImage(i)}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white transition-opacity"
+                  >
+                    <svg
+                      className="w-6 h-6 drop-shadow-md"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* --- Card 3: จดหมายข่าว --- */}
+        <section className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-700 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">
+                📜
+              </span>
+              จดหมายข่าว
+            </h3>
+            <span className="text-xs font-medium bg-purple-50 text-purple-600 px-2 py-1 rounded-md">
+              แนวตั้ง
+            </span>
+          </div>
+
+          <div className="relative group cursor-pointer min-h-[160px] border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-purple-50 hover:border-purple-400 transition-all flex flex-col items-center justify-center mb-6 overflow-hidden">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              onChange={handleNewsletterChange}
+            />
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <svg
+                className="w-6 h-6 text-purple-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <span className="text-sm font-bold text-slate-600 group-hover:text-purple-600">
+              คลิกเพิ่มจดหมายข่าว
+            </span>
+            <span className="text-xs text-slate-400 mt-1">
+              สำหรับเอกสาร/คำสั่ง
+            </span>
+          </div>
+
+          {newsletterPreviews.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 animate-fade-in-up">
+              {newsletterPreviews.map((src, i) => (
+                <div
+                  key={i}
+                  className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm group/img bg-slate-100 border border-slate-200"
+                >
+                  <Image
+                    src={src}
+                    alt="newsletter"
+                    fill
+                    className="object-contain"
+                  />
+                  <button
+                    onClick={() => removeNewsletter(i)}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white transition-opacity"
+                  >
+                    <svg
+                      className="w-6 h-6 drop-shadow-md"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* --- Card 4: ลิงก์ --- */}
+        <section className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+              🔗
+            </div>
+            <h2 className="text-lg font-bold text-slate-700">
+              ลิงก์ภายนอก / เอกสารแนบ
+            </h2>
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3">
+            <input
+              placeholder="ชื่อปุ่ม (เช่น ดาวน์โหลด PDF)"
+              value={currentLink.label}
+              onChange={(e) =>
+                setCurrentLink({ ...currentLink, label: e.target.value })
+              }
+              className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none"
+            />
+            <input
+              placeholder="วาง URL ที่นี่..."
+              value={currentLink.url}
+              onChange={(e) =>
+                setCurrentLink({ ...currentLink, url: e.target.value })
+              }
+              className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none font-mono"
+            />
             <button
-              type="submit"
-              disabled={loading}
-              className={`flex-1 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
-                loading
-                  ? "bg-zinc-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
-              }`}
+              type="button"
+              onClick={addLink}
+              className="bg-slate-800 hover:bg-black text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-slate-800/20 whitespace-nowrap"
             >
-              {loading ? "กำลังบันทึก..." : "บันทึกข่าวสาร"}
+              + เพิ่มลิงก์
             </button>
           </div>
-        </form>
+
+          {links.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {links.map((l, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between bg-white border border-slate-200 p-3 pl-4 rounded-xl shadow-sm hover:border-indigo-300 transition-colors group"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+                      Link
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-sm text-slate-700 truncate">
+                        {l.label}
+                      </span>
+                      <span className="text-xs text-slate-400 truncate font-mono">
+                        {l.url}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeLink(i)}
+                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* --- Action Bar (ล่างสุด) --- */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-50 flex justify-center shadow-2xl">
+        <div className="max-w-5xl w-full flex gap-4">
+          <Link
+            href="/dashboard/news"
+            className="px-8 py-3 rounded-full border-2 border-slate-200 font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-300 transition-all text-center min-w-[140px]"
+          >
+            ยกเลิก
+          </Link>
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading || isCompressing} // ห้ามกดถ้าโหลด หรือ บีบไฟล์อยู่
+            className={`flex-1 py-3 rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2
+                ${isLoading || isCompressing ? "bg-slate-300 text-slate-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-blue-500/50"}`}
+          >
+            {isLoading || isCompressing ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {isCompressing ? "กำลังบีบอัดรูป..." : "กำลังบันทึก..."}
+              </>
+            ) : (
+              <>✨ บันทึกข่าวสาร</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

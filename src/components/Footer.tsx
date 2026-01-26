@@ -99,7 +99,6 @@ export default async function Footer() {
             </div>
           </div>
 
-          {/* Columns 2-5: Dynamic Navigation */}
           {parents.length > 0 ? (
             parents.map((parent) => (
               <div key={parent._id}>

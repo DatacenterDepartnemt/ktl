@@ -1,5 +1,4 @@
-
-
+import Announcement from "./announcement/page";
 import Newsletter from "./newsletter/page";
 import PressRelease from "./pressrelease/page";
 
@@ -9,6 +8,7 @@ export default function Home() {
       <main className="grow">
         <PressRelease />
         <Newsletter />
+        <Announcement />
       </main>
     </div>
   );

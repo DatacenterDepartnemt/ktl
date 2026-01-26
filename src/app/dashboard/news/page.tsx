@@ -1,12 +1,14 @@
 import clientPromise from "@/lib/db";
 import Link from "next/link";
 import Image from "next/image";
-import DeleteNewsBtn from "@/components/DeleteNewsBtn";
+import DeleteNewsBtn from "@/components/DeleteNewsBtn"; // ✅ ต้องมั่นใจว่าไฟล์นี้แก้ตามข้อ 1 แล้ว
+
+// ✅ ใช้ revalidate = 0 เพื่อให้ข้อมูลสดใหม่เสมอ (แก้ปัญหาเพิ่มข่าวแล้วไม่ขึ้น)
+export const revalidate = 0;
 
 interface NewsItem {
   _id: string;
   title: string;
-  // ✅ แก้ type ให้รองรับทั้งแบบเก่า (string) และแบบใหม่ (string[])
   category?: string;
   categories?: string[];
   images?: string[];
@@ -21,9 +23,19 @@ async function getNews(): Promise<NewsItem[]> {
       .collection("news")
       .find({})
       .sort({ createdAt: -1 })
+      .project({
+        title: 1,
+        category: 1,
+        categories: 1,
+        images: 1,
+        createdAt: 1,
+      })
       .toArray();
+
+    // แปลง ObjectId เป็น String เพื่อไม่ให้ Error ตอนส่งเข้า Component
     return JSON.parse(JSON.stringify(news));
-  } catch {
+  } catch (error) {
+    console.error("Database Error:", error);
     return [];
   }
 }
@@ -32,8 +44,8 @@ export default async function ManageNewsPage() {
   const newsList = await getNews();
 
   return (
-    <div className="max-w-7xl mx-auto w-full  p-8 text-zinc-800">
-      {/* Header (ใช้โค้ด Responsive ที่ให้ไปก่อนหน้านี้) */}
+    <div className="max-w-7xl mx-auto w-full p-8 text-zinc-800">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-10 gap-4 border-b border-zinc-200 pb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">
@@ -67,8 +79,8 @@ export default async function ManageNewsPage() {
 
       {/* Grid Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {newsList.map((news) => {
-          // ✅ Logic แปลงข้อมูล: รองรับทั้งระบบเก่า (category) และใหม่ (categories)
+        {newsList.map((news, index) => {
+          // Logic รองรับ Category ทั้งเก่าและใหม่
           const displayCategories =
             news.categories && news.categories.length > 0
               ? news.categories
@@ -87,11 +99,11 @@ export default async function ManageNewsPage() {
                   src={news.images?.[0] || "/no-image.png"}
                   alt={news.title}
                   fill
+                  priority={index < 2}
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
 
-                {/* ✅ แสดงหมวดหมู่ (Loop แสดง Tag) */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[90%]">
                   {displayCategories.map((cat, idx) => (
                     <span
@@ -152,6 +164,7 @@ export default async function ManageNewsPage() {
                     แก้ไข
                   </Link>
 
+                  {/* ✅ ปุ่มลบ (ต้องมาจากไฟล์ที่มี "use client") */}
                   <DeleteNewsBtn id={news._id} />
                 </div>
               </div>

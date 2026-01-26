@@ -1,15 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// 1. เรียกใช้ dynamic import สำหรับ Editor
-import dynamic from "next/dynamic";
-import "suneditor/dist/css/suneditor.min.css"; // Import CSS ของ Editor
 import Link from "next/link";
+import "suneditor/dist/css/suneditor.min.css"; // Import CSS ของ Editor
 
-// โหลด Editor แบบ Dynamic เพื่อไม่ให้พังใน Next.js
-const SunEditor = dynamic(() => import("suneditor-react"), {
-  ssr: false,
-});
+// ❌ เอา dynamic import ออกแล้ว
+// import dynamic from "next/dynamic";
 
 interface PageItem {
   _id: string;
@@ -21,10 +18,21 @@ interface PageItem {
 export default function ManagePages() {
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState(""); // เก็บเป็น HTML String
+  const [content, setContent] = useState("");
   const [pages, setPages] = useState<PageItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+
+  // ✅ เพิ่ม State เก็บตัว Editor
+  const [SunEditorComponent, setSunEditorComponent] =
+    useState<React.ComponentType<any> | null>(null);
+
+  // ✅ ใช้ useEffect โหลด Editor เฉพาะฝั่ง Client (แก้ Error: window is not defined)
+  useEffect(() => {
+    import("suneditor-react").then((mod) => {
+      setSunEditorComponent(() => mod.default);
+    });
+  }, []);
 
   const fetchPages = useCallback(async () => {
     try {
@@ -87,7 +95,7 @@ export default function ManagePages() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto  p-8 text-zinc-800 font-sans">
+    <div className="max-w-7xl mx-auto p-8 text-zinc-800 font-sans">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-zinc-200">
@@ -171,41 +179,69 @@ export default function ManagePages() {
                 </div>
               </div>
 
-              {/* --- ส่วน Editor --- */}
+              {/* --- ส่วน Editor (แก้ไขใหม่) --- */}
               <div>
                 <label className="block text-sm font-bold text-zinc-600 mb-2">
                   เนื้อหา (Content)
                 </label>
-                <div className="rounded-xl overflow-hidden border border-zinc-200 shadow-sm">
-                  {/* SunEditor ใช้ธีมสีขาวอยู่แล้ว เข้ากับหน้าเว็บได้เลย */}
-                  <SunEditor
-                    setContents={content}
-                    onChange={setContent}
-                    height="400px"
-                    setOptions={{
-                      buttonList: [
-                        ["undo", "redo"],
-                        ["font", "fontSize", "formatBlock"],
-                        [
-                          "bold",
-                          "underline",
-                          "italic",
-                          "strike",
-                          "subscript",
-                          "superscript",
+                {/* ใช้ style แทน class h-[400px] เพื่อเลี่ยง warning */}
+                <div
+                  className="rounded-xl overflow-hidden border border-zinc-200 shadow-sm"
+                  style={{ minHeight: "400px" }}
+                >
+                  {SunEditorComponent ? (
+                    <SunEditorComponent
+                      setContents={content}
+                      onChange={setContent}
+                      height="400px"
+                      setOptions={{
+                        buttonList: [
+                          ["undo", "redo"],
+                          ["font", "fontSize", "formatBlock"],
+                          [
+                            "bold",
+                            "underline",
+                            "italic",
+                            "strike",
+                            "subscript",
+                            "superscript",
+                          ],
+                          ["fontColor", "hiliteColor"],
+                          ["removeFormat"],
+                          ["outdent", "indent"],
+                          ["align", "horizontalRule", "list", "lineHeight"],
+                          ["table", "link", "image", "video"],
+                          ["fullScreen", "showBlocks", "codeView"],
                         ],
-                        ["fontColor", "hiliteColor"],
-                        ["removeFormat"],
-                        ["outdent", "indent"],
-                        ["align", "horizontalRule", "list", "lineHeight"],
-                        ["table", "link", "image", "video"],
-                        ["fullScreen", "showBlocks", "codeView"],
-                      ],
-                      defaultTag: "div",
-                      minHeight: "400px",
-                      showPathLabel: false,
-                    }}
-                  />
+                        defaultTag: "div",
+                        minHeight: "400px",
+                        showPathLabel: false,
+                        font: [
+                          "Sarabun",
+                          "Kanit",
+                          "Prompt",
+                          "Mitr",
+                          "Taviraj",
+                          "Chakra Petch",
+                          "Bai Jamjuree",
+                          "Mali",
+                          "Roboto",
+                          "Open Sans",
+                          "Lato",
+                          "Montserrat",
+                          "Arial",
+                          "Courier New",
+                          "Georgia",
+                          "Tahoma",
+                          "Verdana",
+                        ],
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full min-h-100 bg-zinc-50 flex items-center justify-center text-zinc-400 animate-pulse">
+                      กำลังโหลดเครื่องมือเขียน...
+                    </div>
+                  )}
                 </div>
               </div>
 
