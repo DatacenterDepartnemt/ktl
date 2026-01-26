@@ -58,7 +58,7 @@ export default function NewsListClient({
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [selectedDate, setSelectedDate] = useState("");
 
-  // 1. ดึงรายการ "ปี" ที่มีข่าวอยู่จริง
+  // 1. ดึงรายการ "ปี" ที่มีข่าวอยู่จริง เพื่อมาสร้างตัวเลือก Filter
   const availableYears = useMemo(() => {
     const years = new Set(
       initialNews.map((news) => new Date(news.createdAt).getFullYear()),
@@ -70,14 +70,14 @@ export default function NewsListClient({
   const filteredNews = useMemo(() => {
     let result = initialNews;
 
-    // ✅ แก้ไข Logic การกรองหมวดหมู่ (สำคัญ!)
+    // กรองหมวดหมู่
     if (selectedCategory !== "All") {
       result = result.filter((news) => {
-        // 1. เช็คแบบใหม่ (Array): ถ้ามี categories และมีค่าที่เลือกอยู่ใน array นั้น
+        // เช็คแบบใหม่ (Array)
         if (news.categories && news.categories.length > 0) {
           return news.categories.includes(selectedCategory);
         }
-        // 2. เช็คแบบเก่า (String): ถ้าตรงกันเป๊ะๆ (เผื่อข้อมูลเก่า)
+        // เช็คแบบเก่า (String)
         if (news.category) {
           return news.category === selectedCategory;
         }
@@ -85,26 +85,28 @@ export default function NewsListClient({
       });
     }
 
-    // กรองคำค้นหา
+    // กรองคำค้นหา (Search)
     if (searchQuery) {
       result = result.filter((news) =>
         news.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
-    // กรองวันที่
+    // กรองวันที่ (Date Filter)
     if (selectedDate) {
       result = result.filter((news) => {
         const newsDate = new Date(news.createdAt).toISOString().split("T")[0];
         return newsDate === selectedDate;
       });
     } else {
+      // กรองปี
       if (selectedYear !== "All") {
         result = result.filter(
           (news) =>
             new Date(news.createdAt).getFullYear() === parseInt(selectedYear),
         );
       }
+      // กรองเดือน
       if (selectedMonth !== "All") {
         result = result.filter(
           (news) =>
@@ -132,7 +134,7 @@ export default function NewsListClient({
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full p-6 md:p-10  text-zinc-800">
+    <div className="max-w-7xl mx-auto w-full p-6 md:p-10 text-zinc-800">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         {/* --- Header Section --- */}
         <div className="mb-8 text-center md:text-left">
@@ -284,7 +286,6 @@ export default function NewsListClient({
         {/* --- News Grid --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredNews.map((news) => {
-            // ✅ เตรียมข้อมูลหมวดหมู่เพื่อแสดงผล (รองรับทั้งเก่าและใหม่)
             const displayCats =
               news.categories && news.categories.length > 0
                 ? news.categories
@@ -306,7 +307,6 @@ export default function NewsListClient({
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  {/* ✅ แสดง Tag หมวดหมู่ (วนลูปแสดงครบทุกอัน) */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[90%]">
                     {displayCats.map((cat, idx) => (
                       <span

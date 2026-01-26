@@ -4,16 +4,36 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-
-// ✅ 1. Import SunEditor และ CSS
+import { uploadToCloudinary } from "@/lib/upload";
 import dynamic from "next/dynamic";
-import "suneditor/dist/css/suneditor.min.css"; // Import Sun Editor's CSS File
+import "suneditor/dist/css/suneditor.min.css";
 
+// ✅ Cast type เป็น any เพื่อแก้ปัญหา TypeScript กับ SunEditor
 const SunEditor = dynamic(() => import("suneditor-react"), {
-  ssr: false, // ปิด Server-Side Rendering เพราะ Editor ใช้ `window`
+  ssr: false,
 });
 
-// กำหนดรายการหมวดหมู่
+// รายชื่อฟอนต์ (ถ้าต้องการให้เหมือนหน้า Edit)
+const fontList = [
+  "Sarabun",
+  "Kanit",
+  "Prompt",
+  "Mitr",
+  "Taviraj",
+  "Chakra Petch",
+  "Bai Jamjuree",
+  "Mali",
+  "Roboto",
+  "Open Sans",
+  "Lato",
+  "Montserrat",
+  "Arial",
+  "Courier New",
+  "Georgia",
+  "Tahoma",
+  "Verdana",
+];
+
 const CATEGORIES = [
   { value: "PR", label: "ข่าวประชาสัมพันธ์" },
   { value: "Newsletter", label: "จดหมายข่าวประชาสัมพันธ์" },
@@ -25,23 +45,22 @@ const CATEGORIES = [
 
 export default function AddNewsPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false); // ใช้ loading แทน submitting ให้สื่อความหมายเดียวกัน
 
   const [title, setTitle] = useState("");
   const [categories, setCategories] = useState<string[]>(["PR"]);
-
-  // ✅ เปลี่ยน State content ให้รองรับ HTML String จาก Editor
   const [content, setContent] = useState("");
 
+  // --- 1. รูปภาพทั่วไป ---
   const [images, setImages] = useState<string[]>([]);
-  const [newsletterImages, setnewsletterImages] = useState<string[]>([]);
+
+  // --- ✅ 2. รูปภาพจดหมายข่าว ---
+  const [newsletterImages, setNewsletterImages] = useState<string[]>([]);
+
   const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
   const [currentLink, setCurrentLink] = useState({ label: "", url: "" });
-  const [isLoading, setIsLoading] = useState(false);
 
-  // ... (ฟังก์ชัน helper อื่นๆ เหมือนเดิม: toggleCategory, convertFilesToBase64, handleImageChange, etc.) ...
-  // ขออนุญาตละไว้เพื่อความกระชับ (ใช้โค้ดเดิมของคุณได้เลย)
-
-  // --- Helper: จัดการหมวดหมู่ ---
+  // Helper: จัดการหมวดหมู่
   const toggleCategory = (value: string) => {
     setCategories((prev) => {
       if (prev.includes(value)) {
@@ -53,24 +72,23 @@ export default function AddNewsPage() {
     });
   };
 
-  const convertFilesToBase64 = async (files: FileList): Promise<string[]> => {
-    const newImages: string[] = [];
+  // Helper: อัปโหลดรูปภาพหลายไฟล์
+  const handleUploadFiles = async (files: FileList, folder: string) => {
+    setLoading(true);
+    const urls: string[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.size > 5 * 1024 * 1024) continue;
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      newImages.push(base64);
+      const url = await uploadToCloudinary(file, folder);
+      if (url) urls.push(url);
     }
-    return newImages;
+    setLoading(false);
+    return urls;
   };
 
+  // --- Handlers: รูปทั่วไป ---
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImgs = await convertFilesToBase64(e.target.files);
+      const newImgs = await handleUploadFiles(e.target.files, "ktltc_news");
       setImages((prev) => [...prev, ...newImgs]);
     }
   };
@@ -78,18 +96,23 @@ export default function AddNewsPage() {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handlenewsletterImageChange = async (
+  // --- Handlers: รูปจดหมายข่าว ---
+  const handleNewsletterImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImgs = await convertFilesToBase64(e.target.files);
-      setnewsletterImages((prev) => [...prev, ...newImgs]);
+      const newImgs = await handleUploadFiles(
+        e.target.files,
+        "ktltc_newsletter",
+      );
+      setNewsletterImages((prev) => [...prev, ...newImgs]);
     }
   };
-  const removenewsletterImage = (index: number) => {
-    setnewsletterImages(newsletterImages.filter((_, i) => i !== index));
+  const removeNewsletterImage = (index: number) => {
+    setNewsletterImages(newsletterImages.filter((_, i) => i !== index));
   };
 
+  // --- Handlers: ลิงก์ ---
   const addLink = () => {
     if (currentLink.label.trim() === "" || currentLink.url.trim() === "") {
       alert("กรุณากรอกชื่อปุ่มและลิงก์ให้ครบถ้วน");
@@ -102,9 +125,12 @@ export default function AddNewsPage() {
     setLinks(links.filter((_, i) => i !== index));
   };
 
+  // --- Submit ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (loading) return;
+
+    setLoading(true);
 
     try {
       const res = await fetch("/api/news", {
@@ -113,15 +139,15 @@ export default function AddNewsPage() {
         body: JSON.stringify({
           title,
           categories,
-          content, // ส่ง HTML string ไปบันทึกได้เลย
+          content,
           images,
-          newsletterImages,
+          announcementImages: newsletterImages, // ✅ ส่งฟิลด์ใหม่
           links,
         }),
       });
 
       if (res.ok) {
-        alert("บันทึกข่าวเรียบร้อยแล้ว!");
+        alert("✅ บันทึกข่าวเรียบร้อยแล้ว!");
         router.refresh();
         router.push("/dashboard/news");
       } else {
@@ -131,13 +157,21 @@ export default function AddNewsPage() {
     } catch {
       alert("เชื่อมต่อ Server ไม่ได้");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto w-full p-6 md:p-10 text-zinc-800">
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap");
+        .sun-editor-editable {
+          font-family: "Sarabun", sans-serif !important;
+        }
+      `}</style>
+
       <div className="">
+        {/* Header */}
         <div className="flex items-center gap-4 mb-8 border-b border-zinc-200 pb-6">
           <Link
             href="/dashboard/news"
@@ -152,11 +186,12 @@ export default function AddNewsPage() {
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100 space-y-10"
         >
-          {/* Section 1: ข้อมูลหลัก */}
+          {/* --- Section 1: ข้อมูลหลัก --- */}
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3">
               ข้อมูลข่าวสารทั่วไป
             </h2>
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">
                 หัวข้อข่าว
@@ -170,6 +205,7 @@ export default function AddNewsPage() {
                 required
               />
             </div>
+
             <div className="space-y-3">
               <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">
                 เลือกหมวดหมู่
@@ -216,50 +252,39 @@ export default function AddNewsPage() {
 
           <hr className="border-zinc-100" />
 
-          {/* --- ✅ Section 2: เนื้อหาข่าว (Rich Text Editor) --- */}
+          {/* --- Section 2: เนื้อหาข่าว --- */}
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3 mb-4">
               เนื้อหาข่าว
             </h2>
-            <div className="rounded-xl overflow-hidden border-2 border-zinc-100">
+            <div className="rounded-xl overflow-hidden border-2 border-zinc-100 sun-editor-wrapper">
               <SunEditor
                 setContents={content}
                 onChange={setContent}
                 placeholder="พิมพ์เนื้อหาข่าว หรือวางข้อความที่นี่..."
-                height="400px" // กำหนดความสูง
+                height="400px"
                 setOptions={{
+                  font: fontList,
                   buttonList: [
                     ["undo", "redo"],
                     ["font", "fontSize", "formatBlock"],
-                    [
-                      "bold",
-                      "underline",
-                      "italic",
-                      "strike",
-                      "subscript",
-                      "superscript",
-                    ],
-                    ["fontColor", "hiliteColor", "textStyle"],
+                    ["bold", "underline", "italic", "strike"],
+                    ["fontColor", "hiliteColor"],
                     ["removeFormat"],
                     ["outdent", "indent"],
                     ["align", "horizontalRule", "list", "lineHeight"],
-                    ["table", "link", "image", "video"], // ใส่รูป/วิดีโอในเนื้อหาได้เลย
+                    ["table", "link", "image", "video"],
                     ["fullScreen", "showBlocks", "codeView"],
-                    ["preview", "print"],
                   ],
                   defaultTag: "div",
                   minHeight: "400px",
-                  showPathLabel: false,
                 }}
               />
             </div>
           </div>
 
-          {/* ... (Section 3 ลิงก์, Section 4 รูปทั่วไป, Section 5 รูปจดหมายข่าว เหมือนเดิม) ... */}
-          {/* เพื่อความกระชับ ผมคงส่วนที่เหลือไว้เหมือนเดิมนะครับ ก๊อปปี้ส่วนด้านล่างมาแปะต่อได้เลย */}
-
+          {/* --- Section 3: ลิงก์ --- */}
           <div className="space-y-4 pt-4 border-t border-dashed border-zinc-200">
-            {/* ... ส่วนเพิ่มลิงก์ ... */}
             <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
               ลิงก์ภายนอก / ดาวน์โหลดเอกสาร (Optional)
             </label>
@@ -290,6 +315,7 @@ export default function AddNewsPage() {
                 + เพิ่มลิงก์
               </button>
             </div>
+
             {links.length > 0 && (
               <div className="space-y-2">
                 {links.map((link, index) => (
@@ -297,7 +323,7 @@ export default function AddNewsPage() {
                     key={index}
                     className="flex items-center justify-between bg-blue-50 border border-blue-100 p-3 rounded-xl"
                   >
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-bold text-zinc-700">
                       {link.label}{" "}
                       <span className="text-xs text-zinc-400 font-normal">
                         ({link.url})
@@ -306,7 +332,7 @@ export default function AddNewsPage() {
                     <button
                       type="button"
                       onClick={() => removeLink(index)}
-                      className="text-red-500"
+                      className="text-red-500 hover:bg-red-100 w-8 h-8 rounded-lg transition-colors"
                     >
                       ×
                     </button>
@@ -318,12 +344,11 @@ export default function AddNewsPage() {
 
           <hr className="border-zinc-100" />
 
-          {/* Section 4: รูปทั่วไป */}
+          {/* --- Section 4: รูปภาพทั่วไป --- */}
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-blue-500 pl-3">
               รูปภาพประกอบ (ทั่วไป)
             </h2>
-            {/* ... Input File เดิม ... */}
             <div className="relative w-full h-32 border-2 border-dashed border-zinc-300 bg-zinc-50 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group">
               <input
                 type="file"
@@ -333,23 +358,30 @@ export default function AddNewsPage() {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
               <div className="flex flex-col items-center justify-center h-full text-zinc-400 group-hover:text-blue-500">
-                <span className="font-bold text-sm">
-                  + คลิกเพื่อเพิ่มรูปภาพทั่วไป
-                </span>
+                {loading ? (
+                  <span className="font-bold text-sm animate-pulse">
+                    กำลังอัปโหลดรูปภาพ...
+                  </span>
+                ) : (
+                  <span className="font-bold text-sm">
+                    + คลิกเพื่อเพิ่มรูปภาพทั่วไป
+                  </span>
+                )}
               </div>
             </div>
+
             {images.length > 0 && (
-              <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {images.map((img, idx) => (
                   <div
                     key={idx}
-                    className="relative aspect-video rounded-xl overflow-hidden border"
+                    className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 shadow-sm group"
                   >
                     <Image src={img} fill alt="" className="object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center"
+                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ×
                     </button>
@@ -361,43 +393,44 @@ export default function AddNewsPage() {
 
           <hr className="border-zinc-100" />
 
-          {/* Section 5: รูปจดหมายข่าว */}
+          {/* --- Section 5: รูปจดหมายข่าว --- */}
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-zinc-800 border-l-4 border-orange-500 pl-3">
               รูปภาพสำหรับจดหมายข่าว
             </h2>
-            {/* ... Input File เดิม ... */}
             <div className="relative w-full h-32 border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer group">
               <input
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={handlenewsletterImageChange}
+                onChange={handleNewsletterImageChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
               <div className="flex flex-col items-center justify-center h-full text-orange-400 group-hover:text-orange-600">
-                <span className="font-bold text-sm">
-                  + คลิกเพื่อเพิ่มรูปจดหมายข่าว
-                </span>
+                {loading ? (
+                  <span className="font-bold text-sm animate-pulse">
+                    กำลังอัปโหลดรูปภาพ...
+                  </span>
+                ) : (
+                  <span className="font-bold text-sm">
+                    + คลิกเพื่อเพิ่มรูปจดหมายข่าว
+                  </span>
+                )}
               </div>
             </div>
+
             {newsletterImages.length > 0 && (
-              <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {newsletterImages.map((img, idx) => (
                   <div
                     key={idx}
-                    className="relative aspect-3/4 rounded-xl overflow-hidden border"
+                    className="relative aspect-3/4 rounded-xl overflow-hidden border border-orange-200 shadow-sm bg-white group"
                   >
-                    <Image
-                      src={img}
-                      fill
-                      alt=""
-                      className="object-contain bg-white"
-                    />
+                    <Image src={img} fill alt="" className="object-contain" />
                     <button
                       type="button"
-                      onClick={() => removenewsletterImage(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center"
+                      onClick={() => removeNewsletterImage(idx)}
+                      className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ×
                     </button>
@@ -407,19 +440,24 @@ export default function AddNewsPage() {
             )}
           </div>
 
+          {/* --- Buttons --- */}
           <div className="flex items-center gap-4 pt-6 border-t border-zinc-100">
             <Link
               href="/dashboard/news"
-              className="px-6 py-3 rounded-xl border-2 border-zinc-200 text-zinc-500 font-bold hover:bg-zinc-50"
+              className="px-6 py-3 rounded-xl border-2 border-zinc-200 text-zinc-500 font-bold hover:bg-zinc-50 transition-colors"
             >
               ยกเลิก
             </Link>
             <button
               type="submit"
-              disabled={isLoading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg"
+              disabled={loading}
+              className={`flex-1 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
+                loading
+                  ? "bg-zinc-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+              }`}
             >
-              {isLoading ? "กำลังบันทึก..." : "บันทึกข่าวสาร"}
+              {loading ? "กำลังบันทึก..." : "บันทึกข่าวสาร"}
             </button>
           </div>
         </form>

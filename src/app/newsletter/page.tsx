@@ -33,6 +33,7 @@ async function getNewsletters(): Promise<NewsItem[]> {
       .collection("news")
       .find(query)
       .sort({ createdAt: -1 }) // เรียงจากใหม่ไปเก่า
+      .limit(3)
       .toArray();
 
     return JSON.parse(JSON.stringify(newsletters));

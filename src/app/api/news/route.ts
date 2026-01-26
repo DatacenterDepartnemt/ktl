@@ -3,11 +3,11 @@ import clientPromise from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    // ✅ 1. รับค่า announcementImages เพิ่มเข้ามา
+    // ✅ 1. รับค่าทั้งหมดรวมถึง announcementImages และ links
     const { title, categories, content, images, announcementImages, links } =
       await request.json();
 
-    // Validation
+    // Validation: ตรวจสอบข้อมูลจำเป็น
     if (
       !title ||
       !categories ||
@@ -24,17 +24,23 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db("ktltc_db");
 
+    // เตรียมข้อมูลบันทึก
     const newNews = {
       title,
       categories,
-      content,
-      images: images || [],
-      // ✅ 2. บันทึกลง DB (ถ้าไม่มีให้เป็น empty array)
+      content, // HTML String จาก SunEditor
+      images: images || [], // รูปทั่วไป (Array of URLs)
+
+      // ✅ 2. บันทึกรูปจดหมายข่าว (ถ้าไม่มีให้เป็น empty array)
       announcementImages: announcementImages || [],
+
+      // ✅ 3. บันทึกลิงก์ (ถ้าไม่มีให้เป็น empty array)
       links: links || [],
+
       createdAt: new Date().toISOString(),
     };
 
+    // บันทึกลง Database
     await db.collection("news").insertOne(newNews);
 
     return NextResponse.json({ success: true }, { status: 201 });
