@@ -1,119 +1,88 @@
+/* =================================================================================
+   1. IMPORTS (ต้องอยู่บนสุดเสมอ)
+   ================================================================================= */
+/* ฟอนต์ Prompt และ Charm */
 @import url("https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Charm:wght@400;700&display=swap");
+
+/* Tailwind CSS Framework */
 @import "tailwindcss";
 
-* {
-  font-family: "Prompt", serif;
+/* HeroUI Source */
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+/* =================================================================================
+   2. THEME CONFIGURATION
+   ================================================================================= */
+@theme {
+  --color-primary: #3b82f6;
+  --color-dark: #111827;
+  --color-dark-6: #171717;
+  --color-body-color: #6b7280;
+  --color-white: #ffffff;
+
+  --animate-meteor-effect: meteor 5s linear infinite;
+
+  @keyframes meteor {
+    0% { transform: rotate(215deg) translateX(0); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
+  }
 }
 
-.prompt-thin {
-  font-family: "Prompt", serif;
-  font-weight: 100;
-  font-style: normal;
+/* =================================================================================
+   3. BASE RESET & TYPOGRAPHY
+   ================================================================================= */
+@layer base {
+  /* กำหนด Prompt เป็นฟอนต์หลักทั้งเว็บ */
+  * {
+    font-family: "Prompt", serif;
+  }
+
+  body {
+    background-color: var(--color-white);
+    color: var(--color-dark);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  :root[class~="dark"] body {
+    color: var(--color-white) !important;
+    background-color: var(--color-dark-6) !important;
+  }
+  
+  /* Reset อื่นๆ */
+  img, video { display: block; max-width: 100%; height: auto; }
+  button, input, textarea { font-family: inherit; }
 }
 
-.prompt-extralight {
-  font-family: "Prompt", serif;
-  font-weight: 200;
-  font-style: normal;
-}
+/* =================================================================================
+   4. CUSTOM FONT UTILITIES (จากโค้ดของคุณ)
+   ================================================================================= */
+.prompt-thin { font-weight: 100; font-style: normal; }
+.prompt-extralight { font-weight: 200; font-style: normal; }
+.prompt-light { font-weight: 300; font-style: normal; }
+.prompt-regular { font-weight: 400; font-style: normal; }
+.prompt-medium { font-weight: 500; font-style: normal; }
+.prompt-semibold { font-weight: 600; font-style: normal; }
+.prompt-bold { font-weight: 700; font-style: normal; }
+.prompt-extrabold { font-weight: 800; font-style: normal; }
+.prompt-black { font-weight: 900; font-style: normal; }
 
-.prompt-light {
-  font-family: "Prompt", serif;
-  font-weight: 300;
-  font-style: normal;
-}
+.prompt-thin-italic { font-weight: 100; font-style: italic; }
+.prompt-extralight-italic { font-weight: 200; font-style: italic; }
+.prompt-light-italic { font-weight: 300; font-style: italic; }
+.prompt-regular-italic { font-weight: 400; font-style: italic; }
+.prompt-medium-italic { font-weight: 500; font-style: italic; }
+.prompt-semibold-italic { font-weight: 600; font-style: italic; }
+.prompt-bold-italic { font-weight: 700; font-style: italic; }
+.prompt-extrabold-italic { font-weight: 800; font-style: italic; }
+.prompt-black-italic { font-weight: 900; font-style: italic; }
 
-.prompt-regular {
-  font-family: "Prompt", serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.prompt-medium {
-  font-family: "Prompt", serif;
-  font-weight: 500;
-  font-style: normal;
-}
-
-.prompt-semibold {
-  font-family: "Prompt", serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.prompt-bold {
-  font-family: "Prompt", serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-.prompt-extrabold {
-  font-family: "Prompt", serif;
-  font-weight: 800;
-  font-style: normal;
-}
-
-.prompt-black {
-  font-family: "Prompt", serif;
-  font-weight: 900;
-  font-style: normal;
-}
-
-.prompt-thin-italic {
-  font-family: "Prompt", serif;
-  font-weight: 100;
-  font-style: italic;
-}
-
-.prompt-extralight-italic {
-  font-family: "Prompt", serif;
-  font-weight: 200;
-  font-style: italic;
-}
-
-.prompt-light-italic {
-  font-family: "Prompt", serif;
-  font-weight: 300;
-  font-style: italic;
-}
-
-.prompt-regular-italic {
-  font-family: "Prompt", serif;
-  font-weight: 400;
-  font-style: italic;
-}
-
-.prompt-medium-italic {
-  font-family: "Prompt", serif;
-  font-weight: 500;
-  font-style: italic;
-}
-
-.prompt-semibold-italic {
-  font-family: "Prompt", serif;
-  font-weight: 600;
-  font-style: italic;
-}
-
-.prompt-bold-italic {
-  font-family: "Prompt", serif;
-  font-weight: 700;
-  font-style: italic;
-}
-
-.prompt-extrabold-italic {
-  font-family: "Prompt", serif;
-  font-weight: 800;
-  font-style: italic;
-}
-
-.prompt-black-italic {
-  font-family: "Prompt", serif;
-  font-weight: 900;
-  font-style: italic;
-}
-
+/* =================================================================================
+   5. SYNTAX HIGHLIGHTING (PrismJS / Code Blocks)
+   ================================================================================= */
 pre[class*="language-"]::selection,
 code[class*="language-"]::selection,
 pre[class*="language-"] *::selection,
@@ -142,231 +111,67 @@ pre[class*="language-"] {
   color: #db4c69;
   background: #f9f2f4;
 }
-/*********************************************************
-* Tokens
-*/
-.namespace {
-  opacity: 0.7;
-}
 
-.token.doctype .token.doctype-tag {
-  color: #569cd6;
-}
-
-.token.doctype .token.name {
-  color: #9cdcfe;
-}
-
-.token.comment,
-.token.prolog {
-  color: #6a9955;
-}
-
+/* Tokens */
+.namespace { opacity: 0.7; }
+.token.doctype .token.doctype-tag { color: #569cd6; }
+.token.doctype .token.name { color: #9cdcfe; }
+.token.comment, .token.prolog { color: #6a9955; }
 .token.punctuation,
 .language-html .language-css .token.punctuation,
-.language-html .language-javascript .token.punctuation {
-  color: #d4d4d4;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.inserted,
-.token.unit {
-  color: #b5cea8;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.deleted {
-  color: #ce9178;
-}
-
-.language-css .token.string.url {
-  text-decoration: underline;
-}
-
-.token.operator,
-.token.entity {
-  color: #d4d4d4;
-}
-
-.token.operator.arrow {
-  color: #569cd6;
-}
-
-.token.atrule {
-  color: #ce9178;
-}
-
-.token.atrule .token.rule {
-  color: #c586c0;
-}
-
-.token.atrule .token.url {
-  color: #9cdcfe;
-}
-
-.token.atrule .token.url .token.function {
-  color: #dcdcaa;
-}
-
-.token.atrule .token.url .token.punctuation {
-  color: #d4d4d4;
-}
-
-.token.keyword {
-  color: #569cd6;
-}
-
-.token.keyword.module,
-.token.keyword.control-flow {
-  color: #c586c0;
-}
-
-.token.function,
-.token.function .token.maybe-class-name {
-  color: #dcdcaa;
-}
-
-.token.regex {
-  color: #d16969;
-}
-
-.token.important {
-  color: #569cd6;
-}
-
-.token.italic {
-  font-style: italic;
-}
-
-.token.constant {
-  color: #9cdcfe;
-}
-
-.token.class-name,
-.token.maybe-class-name {
-  color: #4ec9b0;
-}
-
-.token.console {
-  color: #9cdcfe;
-}
-
-.token.parameter {
-  color: #9cdcfe;
-}
-
-.token.interpolation {
-  color: #9cdcfe;
-}
-
-.token.punctuation.interpolation-punctuation {
-  color: #569cd6;
-}
-
-.token.boolean {
-  color: #569cd6;
-}
-
-.token.property,
-.token.variable,
+.language-html .language-javascript .token.punctuation { color: #d4d4d4; }
+.token.property, .token.tag, .token.boolean, .token.number,
+.token.constant, .token.symbol, .token.inserted, .token.unit { color: #b5cea8; }
+.token.selector, .token.attr-name, .token.string, .token.char,
+.token.builtin, .token.deleted { color: #ce9178; }
+.language-css .token.string.url { text-decoration: underline; }
+.token.operator, .token.entity { color: #d4d4d4; }
+.token.operator.arrow { color: #569cd6; }
+.token.atrule { color: #ce9178; }
+.token.atrule .token.rule { color: #c586c0; }
+.token.atrule .token.url { color: #9cdcfe; }
+.token.atrule .token.url .token.function { color: #dcdcaa; }
+.token.atrule .token.url .token.punctuation { color: #d4d4d4; }
+.token.keyword { color: #569cd6; }
+.token.keyword.module, .token.keyword.control-flow { color: #c586c0; }
+.token.function, .token.function .token.maybe-class-name { color: #dcdcaa; }
+.token.regex { color: #d16969; }
+.token.important { color: #569cd6; }
+.token.italic { font-style: italic; }
+.token.constant { color: #9cdcfe; }
+.token.class-name, .token.maybe-class-name { color: #4ec9b0; }
+.token.console { color: #9cdcfe; }
+.token.parameter { color: #9cdcfe; }
+.token.interpolation { color: #9cdcfe; }
+.token.punctuation.interpolation-punctuation { color: #569cd6; }
+.token.boolean { color: #569cd6; }
+.token.property, .token.variable,
 .token.imports .token.maybe-class-name,
-.token.exports .token.maybe-class-name {
-  color: #9cdcfe;
-}
+.token.exports .token.maybe-class-name { color: #9cdcfe; }
+.token.selector { color: #d7ba7d; }
+.token.escape { color: #d7ba7d; }
+.token.tag { color: #569cd6; }
+.token.tag .token.punctuation { color: #808080; }
+.token.cdata { color: #808080; }
+.token.attr-name { color: #9cdcfe; }
+.token.attr-value, .token.attr-value .token.punctuation { color: #ce9178; }
+.token.attr-value .token.punctuation.attr-equals { color: #d4d4d4; }
+.token.entity { color: #569cd6; }
+.token.namespace { color: #4ec9b0; }
 
-.token.selector {
-  color: #d7ba7d;
-}
+/* Language Specific */
+pre[class*="language-javascript"], code[class*="language-javascript"],
+pre[class*="language-jsx"], code[class*="language-jsx"],
+pre[class*="language-typescript"], code[class*="language-typescript"],
+pre[class*="language-tsx"], code[class*="language-tsx"] { color: #9cdcfe; }
+pre[class*="language-css"], code[class*="language-css"] { color: #ce9178; }
+pre[class*="language-html"], code[class*="language-html"] { color: #d4d4d4; }
+.language-regex .token.anchor { color: #dcdcaa; }
+.language-html .token.punctuation { color: #808080; }
 
-.token.escape {
-  color: #d7ba7d;
-}
-
-.token.tag {
-  color: #569cd6;
-}
-
-.token.tag .token.punctuation {
-  color: #808080;
-}
-
-.token.cdata {
-  color: #808080;
-}
-
-.token.attr-name {
-  color: #9cdcfe;
-}
-
-.token.attr-value,
-.token.attr-value .token.punctuation {
-  color: #ce9178;
-}
-
-.token.attr-value .token.punctuation.attr-equals {
-  color: #d4d4d4;
-}
-
-.token.entity {
-  color: #569cd6;
-}
-
-.token.namespace {
-  color: #4ec9b0;
-}
-/*********************************************************
-* Language Specific
-*/
-
-pre[class*="language-javascript"],
-code[class*="language-javascript"],
-pre[class*="language-jsx"],
-code[class*="language-jsx"],
-pre[class*="language-typescript"],
-code[class*="language-typescript"],
-pre[class*="language-tsx"],
-code[class*="language-tsx"] {
-  color: #9cdcfe;
-}
-
-pre[class*="language-css"],
-code[class*="language-css"] {
-  color: #ce9178;
-}
-
-pre[class*="language-html"],
-code[class*="language-html"] {
-  color: #d4d4d4;
-}
-
-.language-regex .token.anchor {
-  color: #dcdcaa;
-}
-
-.language-html .token.punctuation {
-  color: #808080;
-}
-/*********************************************************
-* Line highlighting
-*/
-pre[data-line] {
-  position: relative;
-}
-
-pre[class*="language-"] > code[class*="language-"] {
-  position: relative;
-  z-index: 1;
-}
-
+/* Line highlighting */
+pre[data-line] { position: relative; }
+pre[class*="language-"] > code[class*="language-"] { position: relative; z-index: 1; }
 .line-highlight {
   position: absolute;
   left: 0;
@@ -379,4 +184,20 @@ pre[class*="language-"] > code[class*="language-"] {
   pointer-events: none;
   line-height: inherit;
   white-space: pre;
+}
+
+/* =================================================================================
+   6. COMPONENT OVERRIDES (Sticky Menu & Animations)
+   ================================================================================= */
+@layer components {
+  /* Sticky Menu Code from previous config */
+  .sticky-menu .navbar-logo { @apply py-2; }
+  .sticky-menu #navbarToggler span { @apply bg-[#6f7276] dark:bg-white; }
+  .sticky-menu #navbarCollapse li > a { @apply text-dark hover:text-primary hover:opacity-100 dark:text-white; }
+  
+  /* Blog Details Typography */
+  .blog-details p { @apply text-body-color dark:text-dark-6 text-base leading-relaxed mb-8; }
+  .blog-details h1 { @apply text-dark mb-8 text-3xl font-bold dark:text-white; }
+  
+  /* ... (เก็บ Style เดิมของคุณไว้ เพื่อไม่ให้เว็บพัง) ... */
 }

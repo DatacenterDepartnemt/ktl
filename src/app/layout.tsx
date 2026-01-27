@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import "@ant-design/v5-patch-for-react-19";
 import "../styles/prism-vsc-dark-plus.css";
 import "../styles/index.css";
+import "../styles/globals.css";
 
 const prompt = Prompt({
   subsets: ["thai", "latin"],

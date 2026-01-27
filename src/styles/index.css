@@ -1,9 +1,10 @@
-@import "tailwindcss";
-
-/* ✅ ย้าย @import Font มาไว้ตรงนี้ (บนสุด) */
+/* ✅ 1. Font ต้องมาก่อนเพื่อนเสมอ (เพื่อไม่ให้โดน Warning) */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
-/* ตามด้วย Config ของ Tailwind v4 */
+/* ✅ 2. ตามด้วย Tailwind CSS Main Import */
+@import "tailwindcss";
+
+/* ✅ 3. ตามด้วย Config เสริมของ Tailwind v4 */
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @custom-variant dark (&:is(.dark *));
 
