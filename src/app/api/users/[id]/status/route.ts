@@ -2,15 +2,17 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
 
-// ✅ PATCH: แก้ไขข้อมูลผู้ใช้ (Approve / Change Role) - (อันเดิมของคุณ)
+// ✅ PATCH: แก้ไขสถานะ
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }, // รองรับ Next.js 15
 ) {
   try {
-    const { id } = await params;
+    const { id } = await params; // แกะ ID ออกมา
     const body = await req.json();
     const { isActive, role } = body;
+
+    console.log(`⚡ Updating User: ${id}`, body); // ดู Log ใน Terminal
 
     const client = await clientPromise;
     const db = client.db("ktltc_db");
@@ -19,17 +21,23 @@ export async function PATCH(
     if (typeof isActive === "boolean") updateData.isActive = isActive;
     if (role) updateData.role = role;
 
-    await db
+    // อัปเดตข้อมูล
+    const result = await db
       .collection("users")
       .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
 
-    return NextResponse.json({ message: "อัปเดตข้อมูลสำเร็จ" });
+    if (result.modifiedCount === 0) {
+      console.warn("⚠️ No documents updated. ID might be wrong.");
+    }
+
+    return NextResponse.json({ message: "Success" });
   } catch (error) {
+    console.error("❌ Update Error:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
 
-// ✅ DELETE: ลบผู้ใช้ (เพิ่มส่วนนี้เข้าไปต่อท้ายไฟล์เดิม)
+// ✅ DELETE: ลบผู้ใช้
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -39,11 +47,11 @@ export async function DELETE(
     const client = await clientPromise;
     const db = client.db("ktltc_db");
 
-    // ลบข้อมูลออกจากฐานข้อมูล
     await db.collection("users").deleteOne({ _id: new ObjectId(id) });
 
-    return NextResponse.json({ message: "ลบผู้ใช้สำเร็จ" });
+    return NextResponse.json({ message: "Deleted" });
   } catch (error) {
+    console.error("❌ Delete Error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

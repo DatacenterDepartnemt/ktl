@@ -145,11 +145,11 @@ export default function NavbarClient({
                 </div>
               </button>
 
-              {/* ✅ แก้ไขตรงนี้: ใช้ pt-2 เพื่อเชื่อมช่องว่าง และย้าย style กล่องไปไว้ข้างใน */}
+              {/* Dropdown Menu */}
               {isUserDropdownOpen && (
                 <div className="absolute right-0 top-full pt-2 w-64 animate-in fade-in zoom-in-95 duration-200">
-                  {/* กล่องเนื้อหาจริงย้ายมาตรงนี้ */}
                   <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
+                    {/* Header */}
                     <div className="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50">
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         Signed in as
@@ -160,6 +160,7 @@ export default function NavbarClient({
                     </div>
 
                     <div className="p-2 space-y-1">
+                      {/* 1. Super Admin Console (เฉพาะ Super Admin) */}
                       {role === "super_admin" && (
                         <Link
                           href="/dashboard/super-admin"
@@ -169,6 +170,15 @@ export default function NavbarClient({
                         </Link>
                       )}
 
+                      {/* 2. ✅ เพิ่ม: ข้อมูลส่วนตัว (Edit Profile) */}
+                      <Link
+                        href="/dashboard/profile"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                      >
+                        <span>👤</span> ข้อมูลส่วนตัว
+                      </Link>
+
+                      {/* 3. Dashboard */}
                       <Link
                         href="/dashboard"
                         className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
@@ -176,6 +186,7 @@ export default function NavbarClient({
                         <span>🏠</span> Dashboard
                       </Link>
 
+                      {/* 4. Logout */}
                       <div className="border-t border-zinc-100 dark:border-zinc-800 mt-2 pt-2">
                         <LogoutBtn />
                       </div>

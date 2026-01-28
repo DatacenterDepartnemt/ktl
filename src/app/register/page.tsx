@@ -7,10 +7,12 @@ import Link from "next/link";
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     username: "",
-    email: "", // ✅ ต้องมี เพราะ Backend ต้องการ
+    email: "",
     password: "",
     confirmPassword: "",
     name: "",
+    phone: "", // ✅ เพิ่มเบอร์โทร
+    lineId: "", // ✅ เพิ่ม Line ID
   });
 
   const router = useRouter();
@@ -48,7 +50,6 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ ข้อความสำคัญ: แจ้งให้รู้ว่าต้องรออนุมัติ
         alert(
           "✅ สมัครสมาชิกสำเร็จ!\n\nกรุณารอผู้ดูแลระบบอนุมัติบัญชีของคุณก่อนเข้าใช้งาน",
         );
@@ -96,6 +97,35 @@ export default function RegisterPage() {
               className="w-full p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400"
               onChange={handleChange}
               required
+            />
+          </div>
+
+          {/* ✅ เพิ่ม: เบอร์โทรศัพท์ */}
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1 mb-1 block">
+              เบอร์โทรศัพท์
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="08xxxxxxxx"
+              className="w-full p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400"
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* ✅ เพิ่ม: Line ID */}
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1 mb-1 block">
+              Line ID
+            </label>
+            <input
+              type="text"
+              name="lineId"
+              placeholder="Line ID ของคุณ"
+              className="w-full p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400"
+              onChange={handleChange}
             />
           </div>
 
@@ -163,8 +193,6 @@ export default function RegisterPage() {
               required
             />
           </div>
-
-          {/* ❌ เอา Dropdown Role ออกไปแล้ว (เพราะ Backend บังคับเป็น Editor เอง) */}
 
           <button
             disabled={loading}
