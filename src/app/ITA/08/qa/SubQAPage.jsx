@@ -1,5 +1,6 @@
 import Link from "next/link";
-import TicketCard from "@/app/(components)/TicketCard";
+// import TicketCard from "@/app/(components)/TicketCard";
+import TicketCard from "../../../(website)/(components)/TicketCard";
 import { getAllTickets } from "@/lib/data";
 import { MessageCircle, Plus, Layers, Inbox } from "lucide-react"; // แนะนำให้ลง lucide-react เพิ่มเพื่อ icon สวยๆ
 
