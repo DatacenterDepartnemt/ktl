@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -31,6 +31,13 @@ const MONTHS = [
   { value: "11", label: "ธันวาคม" },
 ];
 
+// ✅ 1. กำหนด URL ปลายทางสำหรับปีเก่าๆ (แก้ไขลิงก์ได้ที่นี่)
+const REDIRECT_URLS: Record<string, string> = {
+  "2566": "https://ktltcv1.vercel.app/pressrelease/2566", // ใส่ลิงก์จริง
+  "2567": "https://ktltcv1.vercel.app/pressrelease/2567",
+  "2568": "https://ktltcv3.vercel.app/pressrelease/2568",
+};
+
 interface NewsItem {
   _id: string;
   title: string;
@@ -52,17 +59,41 @@ export default function NewsListClient({
   const [selectedYear, setSelectedYear] = useState("All");
   const [visibleCount, setVisibleCount] = useState(15);
 
-  // --- 1. สร้างรายการปี (พ.ศ.) อัตโนมัติจากข้อมูล ---
+  // --- 2. Logic สำหรับ Redirect เมื่อเลือกปีที่กำหนด ---
+  useEffect(() => {
+    if (REDIRECT_URLS[selectedYear]) {
+      // แจ้งเตือนผู้ใช้ก่อน (Optional - ลบได้ถ้าต้องการให้ไปเลย)
+      const confirmMsg = `คุณเลือกดูข้อมูลปี ${selectedYear}\nระบบจะพาคุณไปยังเว็บไซต์เวอร์ชันเก่า ต้องการดำเนินการต่อหรือไม่?`;
+
+      if (window.confirm(confirmMsg)) {
+        window.open(REDIRECT_URLS[selectedYear], "_blank"); // เปิดแท็บใหม่
+      }
+
+      // Reset ค่ากลับเป็น 'All' เพื่อไม่ให้ Dropdown ค้างที่ปีเก่า
+      setSelectedYear("All");
+    }
+  }, [selectedYear]);
+
+  // --- 3. สร้างรายการปี (รวมปีปัจจุบันและปีเก่าที่กำหนดไว้) ---
   const availableYears = useMemo(() => {
     const years = new Set<string>();
+
+    // ดึงปีที่มีอยู่จริงในข้อมูล
     initialNews.forEach((news) => {
       const year = new Date(news.createdAt).getFullYear() + 543;
       years.add(year.toString());
     });
+
+    // ✅ บังคับเพิ่มปี 2566, 2567, 2568 เข้าไปในรายการเสมอ
+    years.add("2566");
+    years.add("2567");
+    years.add("2568");
+
+    // เรียงลำดับจากมากไปน้อย
     return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [initialNews]);
 
-  // --- 2. Logic การกรองข้อมูล (Filter) ---
+  // --- 4. Logic การกรองข้อมูล ---
   const filteredNews = useMemo(() => {
     let result = Array.isArray(initialNews) ? initialNews : [];
 
@@ -74,8 +105,8 @@ export default function NewsListClient({
       });
     }
 
-    // กรองปี
-    if (selectedYear !== "All") {
+    // กรองปี (เฉพาะปีที่มีข้อมูลในระบบปัจจุบัน)
+    if (selectedYear !== "All" && !REDIRECT_URLS[selectedYear]) {
       result = result.filter((news) => {
         const year = new Date(news.createdAt).getFullYear() + 543;
         return year.toString() === selectedYear;
@@ -93,16 +124,13 @@ export default function NewsListClient({
     return result;
   }, [initialNews, selectedCategory, selectedMonth, selectedYear]);
 
-  // ตัดข้อมูลตามจำนวนที่จะแสดง
   const paginatedNews = filteredNews.slice(0, visibleCount);
-
-  // --- Handlers ---
   const handleLoadMore = () => setVisibleCount((prev) => prev + 10);
 
   return (
     <div className="w-full pb-32">
-      {/* --- Filter Section: Glassmorphism Style --- */}
-      <div className="mb-16 bg-white/70 backdrop-blur-xl p-3 md:p-4 rounded-[2.5rem] border border-slate-200/60 sticky top-24 z-20 shadow-xl shadow-slate-200/30 dark:bg-slate-900/80 dark:border-slate-700 dark:shadow-black/40">
+      {/* --- Filter Section --- */}
+      <div className="mb-16 bg-white/70 backdrop-blur-xl p-3 md:p-4 rounded-[2.5rem] border border-slate-200/60 top-24 z-20 shadow-xl shadow-slate-200/30 dark:bg-slate-900/80 dark:border-slate-700 dark:shadow-black/40">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Category Select */}
           <div className="relative group">
@@ -137,7 +165,7 @@ export default function NewsListClient({
             </div>
           </div>
 
-          {/* Year Select */}
+          {/* Year Select (ที่มี Logic Redirect) */}
           <div className="relative group">
             <select
               value={selectedYear}
@@ -150,7 +178,7 @@ export default function NewsListClient({
               <option value="All">ทุกปี พ.ศ.</option>
               {availableYears.map((year) => (
                 <option key={year} value={year}>
-                  พ.ศ. {year}
+                  พ.ศ. {year} {REDIRECT_URLS[year] ? "🔗 (เว็บเก่า)" : ""}
                 </option>
               ))}
             </select>
@@ -206,7 +234,7 @@ export default function NewsListClient({
         </div>
       </div>
 
-      {/* --- News Grid: Editorial Design --- */}
+      {/* --- News Grid --- */}
       {paginatedNews.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
           {paginatedNews.map((news) => {
@@ -220,28 +248,25 @@ export default function NewsListClient({
                 href={`/news/${news._id}`}
                 className="group flex flex-col h-full bg-transparent transition-all duration-500"
               >
-                {/* 1. Image Container */}
-                <div className="relative aspect-16/10 w-full overflow-hidden rounded-[3rem] bg-slate-100 shadow-2xl shadow-slate-200/50 dark:bg-slate-800 dark:shadow-black/30">
+                {/* Image Container */}
+                <div className="relative aspect-16/10 w-full overflow-hidden rounded-[2rem] bg-slate-100 shadow-2xl shadow-slate-200/50 dark:bg-slate-800 dark:shadow-black/30">
                   <Image
                     src={coverImage}
                     alt={news.title}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes="(max-width: 900px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                   />
-                  {/* Category Badge */}
                   <div className="absolute top-6 left-6 z-10">
                     <span className="px-5 py-2 bg-white/80 backdrop-blur-xl border border-white/40 text-blue-700 text-[10px] font-black rounded-full shadow-sm uppercase tracking-widest dark:bg-slate-900/80 dark:text-blue-400 dark:border-slate-700">
                       {news.categories?.[0] || "General"}
                     </span>
                   </div>
-                  {/* Subtle Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
 
-                {/* 2. Content Details */}
+                {/* Content Details */}
                 <div className="px-3 py-10 flex flex-col flex-1">
-                  {/* Date Metadata */}
                   <div className="flex items-center gap-4 mb-5">
                     <div className="h-px w-10 bg-blue-600/30 group-hover:w-16 transition-all duration-700 ease-in-out dark:bg-blue-500/50"></div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] dark:text-slate-500">
@@ -253,17 +278,14 @@ export default function NewsListClient({
                     </span>
                   </div>
 
-                  {/* News Title */}
                   <h3 className="text-2xl font-bold text-slate-800 line-clamp-2 leading-[1.35] group-hover:text-blue-600 transition-colors duration-300 dark:text-slate-100 dark:group-hover:text-blue-400">
                     {news.title}
                   </h3>
 
-                  {/* Summary Placeholder */}
                   <p className="mt-5 text-slate-500 text-sm leading-relaxed line-clamp-2 font-medium opacity-70 dark:text-slate-400">
                     คลิกเพื่ออ่านรายละเอียดกิจกรรมและความเคลื่อนไหวที่เกิดขึ้นอย่างครบถ้วน...
                   </p>
 
-                  {/* CTA Footer */}
                   <div className="mt-10 pt-8 border-t border-slate-100 flex items-center justify-between dark:border-slate-800">
                     <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-blue-600 transition-all duration-300 transform group-hover:translate-x-2 dark:text-slate-300 dark:group-hover:text-blue-400">
                       อ่านบทความฉบับเต็ม
@@ -313,7 +335,7 @@ export default function NewsListClient({
         </div>
       )}
 
-      {/* --- Load More: Minimalist Style --- */}
+      {/* --- Load More --- */}
       {filteredNews.length > visibleCount && (
         <div className="flex flex-col items-center justify-center mt-24 space-y-6">
           <button
