@@ -31,9 +31,9 @@ const MONTHS = [
   { value: "11", label: "ธันวาคม" },
 ];
 
-// ✅ 1. กำหนด URL ปลายทางสำหรับปีเก่าๆ (แก้ไขลิงก์ได้ที่นี่)
+// URL Redirect ปีเก่า
 const REDIRECT_URLS: Record<string, string> = {
-  "2566": "https://ktltcv1.vercel.app/pressrelease/2566", // ใส่ลิงก์จริง
+  "2566": "https://ktltcv1.vercel.app/pressrelease/2566",
   "2567": "https://ktltcv1.vercel.app/pressrelease/2567",
   "2568": "https://ktltcv3.vercel.app/pressrelease/2568",
 };
@@ -48,56 +48,51 @@ interface NewsItem {
   createdAt: string;
 }
 
+// ✅ 1. เพิ่มฟังก์ชัน getGridClass ตามที่คุณต้องการ
+function getGridClass(count: number) {
+  if (count === 1) return "grid-cols-1";
+  if (count === 2) return "grid-cols-1 md:grid-cols-2";
+  // ปรับให้รองรับได้ถึง 4 คอลัมน์ตามจำนวนข่าวที่มี
+  return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+}
+
 export default function NewsListClient({
   initialNews = [],
 }: {
   initialNews: NewsItem[];
 }) {
-  // --- States ---
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
-  const [visibleCount, setVisibleCount] = useState(15);
+  const [visibleCount, setVisibleCount] = useState(12);
 
-  // --- 2. Logic สำหรับ Redirect เมื่อเลือกปีที่กำหนด ---
+  // --- Redirect Logic ---
   useEffect(() => {
     if (REDIRECT_URLS[selectedYear]) {
-      // แจ้งเตือนผู้ใช้ก่อน (Optional - ลบได้ถ้าต้องการให้ไปเลย)
       const confirmMsg = `คุณเลือกดูข้อมูลปี ${selectedYear}\nระบบจะพาคุณไปยังเว็บไซต์เวอร์ชันเก่า ต้องการดำเนินการต่อหรือไม่?`;
-
       if (window.confirm(confirmMsg)) {
-        window.open(REDIRECT_URLS[selectedYear], "_blank"); // เปิดแท็บใหม่
+        window.open(REDIRECT_URLS[selectedYear], "_blank");
       }
-
-      // Reset ค่ากลับเป็น 'All' เพื่อไม่ให้ Dropdown ค้างที่ปีเก่า
       setSelectedYear("All");
     }
   }, [selectedYear]);
 
-  // --- 3. สร้างรายการปี (รวมปีปัจจุบันและปีเก่าที่กำหนดไว้) ---
+  // --- Filter Logic ---
   const availableYears = useMemo(() => {
     const years = new Set<string>();
-
-    // ดึงปีที่มีอยู่จริงในข้อมูล
     initialNews.forEach((news) => {
       const year = new Date(news.createdAt).getFullYear() + 543;
       years.add(year.toString());
     });
-
-    // ✅ บังคับเพิ่มปี 2566, 2567, 2568 เข้าไปในรายการเสมอ
     years.add("2566");
     years.add("2567");
     years.add("2568");
-
-    // เรียงลำดับจากมากไปน้อย
     return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [initialNews]);
 
-  // --- 4. Logic การกรองข้อมูล ---
   const filteredNews = useMemo(() => {
     let result = Array.isArray(initialNews) ? initialNews : [];
 
-    // กรองหมวดหมู่
     if (selectedCategory !== "All") {
       result = result.filter((news) => {
         const cats = news.categories || (news.category ? [news.category] : []);
@@ -105,7 +100,6 @@ export default function NewsListClient({
       });
     }
 
-    // กรองปี (เฉพาะปีที่มีข้อมูลในระบบปัจจุบัน)
     if (selectedYear !== "All" && !REDIRECT_URLS[selectedYear]) {
       result = result.filter((news) => {
         const year = new Date(news.createdAt).getFullYear() + 543;
@@ -113,7 +107,6 @@ export default function NewsListClient({
       });
     }
 
-    // กรองเดือน
     if (selectedMonth !== "All") {
       result = result.filter((news) => {
         const month = new Date(news.createdAt).getMonth();
@@ -125,20 +118,20 @@ export default function NewsListClient({
   }, [initialNews, selectedCategory, selectedMonth, selectedYear]);
 
   const paginatedNews = filteredNews.slice(0, visibleCount);
-  const handleLoadMore = () => setVisibleCount((prev) => prev + 10);
+  const handleLoadMore = () => setVisibleCount((prev) => prev + 12); // โหลดเพิ่มทีละ 12 (ลงตัวกับ 2, 3, 4)
 
   return (
     <div className="w-full pb-32">
       {/* --- Filter Section --- */}
       <div className="mb-16 bg-white/70 backdrop-blur-xl p-3 md:p-4 rounded-[2.5rem] border border-slate-200/60 top-24 z-20 shadow-xl shadow-slate-200/30 dark:bg-slate-900/80 dark:border-slate-700 dark:shadow-black/40">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Category Select */}
+          {/* Category */}
           <div className="relative group">
             <select
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
-                setVisibleCount(15);
+                setVisibleCount(12);
               }}
               className="w-full bg-white border-none rounded-full px-6 py-4 text-sm font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all shadow-sm group-hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-slate-700"
             >
@@ -165,20 +158,20 @@ export default function NewsListClient({
             </div>
           </div>
 
-          {/* Year Select (ที่มี Logic Redirect) */}
+          {/* Year */}
           <div className="relative group">
             <select
               value={selectedYear}
               onChange={(e) => {
                 setSelectedYear(e.target.value);
-                setVisibleCount(15);
+                setVisibleCount(12);
               }}
               className="w-full bg-white border-none rounded-full px-6 py-4 text-sm font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all shadow-sm group-hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-slate-700"
             >
               <option value="All">ทุกปี พ.ศ.</option>
               {availableYears.map((year) => (
                 <option key={year} value={year}>
-                  พ.ศ. {year} {REDIRECT_URLS[year] ? "🔗 (เว็บเก่า)" : ""}
+                  พ.ศ. {year} {REDIRECT_URLS[year] ? "🔗" : ""}
                 </option>
               ))}
             </select>
@@ -199,13 +192,13 @@ export default function NewsListClient({
             </div>
           </div>
 
-          {/* Month Select */}
+          {/* Month */}
           <div className="relative group">
             <select
               value={selectedMonth}
               onChange={(e) => {
                 setSelectedMonth(e.target.value);
-                setVisibleCount(15);
+                setVisibleCount(12);
               }}
               className="w-full bg-white border-none rounded-full px-6 py-4 text-sm font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all shadow-sm group-hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-slate-700"
             >
@@ -236,37 +229,57 @@ export default function NewsListClient({
 
       {/* --- News Grid --- */}
       {paginatedNews.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
+        // ✅ 2. ใช้ฟังก์ชัน getGridClass ที่นี่ เพื่อปรับ Column ตามจำนวนข่าวที่แสดง
+        <div
+          className={`grid gap-8 md:gap-10 ${getGridClass(paginatedNews.length)}`}
+        >
           {paginatedNews.map((news) => {
             const coverImage =
               news.announcementImages?.[0] ||
               news.images?.[0] ||
               "/no-image.png";
+
+            const displayCategories =
+              news.categories && news.categories.length > 0
+                ? news.categories
+                : news.category
+                  ? [news.category]
+                  : ["General"];
+
             return (
               <Link
                 key={news._id}
                 href={`/news/${news._id}`}
-                className="group flex flex-col h-full bg-transparent transition-all duration-500"
+                className="group flex flex-col bg-white dark:bg-zinc-900/50 rounded-3xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
               >
-                {/* Image Container */}
-                <div className="relative aspect-16/10 w-full overflow-hidden rounded-[2rem] bg-slate-100 shadow-2xl shadow-slate-200/50 dark:bg-slate-800 dark:shadow-black/30">
+                {/* Image Container (Aspect 4:3) */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 dark:bg-zinc-800">
                   <Image
                     src={coverImage}
                     alt={news.title}
                     fill
-                    sizes="(max-width: 900px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
-                  <div className="absolute top-6 left-6 z-10">
-                    <span className="px-5 py-2 bg-white/80 backdrop-blur-xl border border-white/40 text-blue-700 text-[10px] font-black rounded-full shadow-sm uppercase tracking-widest dark:bg-slate-900/80 dark:text-blue-400 dark:border-slate-700">
-                      {news.categories?.[0] || "General"}
-                    </span>
+
+                  {/* Category Badges */}
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 max-w-[90%]">
+                    {displayCategories.map((cat, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm border border-slate-100 dark:border-slate-800"
+                      >
+                        {cat}
+                      </span>
+                    ))}
                   </div>
+
+                  {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
 
                 {/* Content Details */}
-                <div className="px-3 py-10 flex flex-col flex-1">
+                <div className="px-6 py-8 flex flex-col flex-1">
                   <div className="flex items-center gap-4 mb-5">
                     <div className="h-px w-10 bg-blue-600/30 group-hover:w-16 transition-all duration-700 ease-in-out dark:bg-blue-500/50"></div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] dark:text-slate-500">
@@ -278,21 +291,21 @@ export default function NewsListClient({
                     </span>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-slate-800 line-clamp-2 leading-[1.35] group-hover:text-blue-600 transition-colors duration-300 dark:text-slate-100 dark:group-hover:text-blue-400">
+                  <h3 className="text-xl font-bold text-slate-800 line-clamp-2 leading-[1.35] group-hover:text-blue-600 transition-colors duration-300 dark:text-slate-100 dark:group-hover:text-blue-400">
                     {news.title}
                   </h3>
 
-                  <p className="mt-5 text-slate-500 text-sm leading-relaxed line-clamp-2 font-medium opacity-70 dark:text-slate-400">
+                  <p className="mt-4 text-slate-500 text-sm leading-relaxed line-clamp-2 font-medium opacity-70 dark:text-slate-400">
                     คลิกเพื่ออ่านรายละเอียดกิจกรรมและความเคลื่อนไหวที่เกิดขึ้นอย่างครบถ้วน...
                   </p>
 
-                  <div className="mt-10 pt-8 border-t border-slate-100 flex items-center justify-between dark:border-slate-800">
+                  <div className="mt-auto pt-8 border-t border-slate-100 flex items-center justify-between dark:border-slate-800">
                     <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-blue-600 transition-all duration-300 transform group-hover:translate-x-2 dark:text-slate-300 dark:group-hover:text-blue-400">
                       อ่านบทความฉบับเต็ม
                     </span>
-                    <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white transition-all duration-500 dark:border-slate-700 dark:group-hover:bg-blue-500 dark:group-hover:border-blue-500">
+                    <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white transition-all duration-500 dark:border-slate-700 dark:group-hover:bg-blue-500 dark:group-hover:border-blue-500">
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
