@@ -194,7 +194,7 @@ export default async function NewsDetailPage({
     <div className="min-h-screen bg-slate-50/50 dark:bg-zinc-950 text-slate-800 dark:text-slate-200 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
       <main className="pb-16 md:pb-24">
         {/* --- Hero / Header Section --- */}
-        <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 pt-32 pb-12 md:pt-40 md:pb-16 px-4">
+        <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 pt-32 pb-12 md:pt-24 md:pb-16 px-4">
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Breadcrumb */}
             <Link
@@ -220,10 +220,11 @@ export default async function NewsDetailPage({
                 ))}
               </div>
 
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+              <div className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
                 {/* Use actual title if available, otherwise fallback */}
-                {news.title || "วิทยาลัยเทคนิคกันทรลักษ์"}
-              </h1>
+                {/* {news.title || "วิทยาลัยเทคนิคกันทรลักษ์"} */}
+                <p className="text-center">วิทยาลัยเทคนิคกันทรลักษ์</p>
+              </div>
 
               <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-zinc-800 pt-6">
                 <div className="flex items-center gap-2">
@@ -283,6 +284,10 @@ export default async function NewsDetailPage({
               </div>
             </div>
           )}
+
+          <div className="">
+            <FootTitle />
+          </div>
 
           <hr className="border-slate-200 dark:border-zinc-800" />
 
@@ -351,10 +356,6 @@ export default async function NewsDetailPage({
               </div>
             </section>
           )}
-
-          <div className="pt-8">
-            <FootTitle />
-          </div>
 
           {/* --- Navigation --- */}
           <nav className="border-t border-slate-200 dark:border-zinc-800 pt-12">
