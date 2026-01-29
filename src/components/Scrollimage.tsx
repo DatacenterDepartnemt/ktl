@@ -1,18 +1,16 @@
 "use client";
 
-import React from "react";
 import { Carousel, ConfigProvider } from "antd";
-import Image from "next/image";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
-// 💡 แนะนำ: เปลี่ยนชื่อโฟลเดอร์ 'ปก' เป็นภาษาอังกฤษ (เช่น 'banners') เพื่อป้องกันปัญหาบน Server
 const slides = [
-  "/images/ปก/19.webp",
-  "/images/ปก/17.webp",
-  "/images/ปก/18.webp",
-  "/images/ปก/8.webp",
-  "/images/ปก/1.webp",
-  "/images/ปก/2.webp",
+  "/images/banners/19.webp",
+  "/images/banners/17.webp",
+  "/images/banners/18.webp",
+  "/images/banners/8.webp",
+  "/images/banners/1.webp",
+  "/images/banners/2.webp",
 ];
 
 const Scrollimage: React.FC = () => {
@@ -50,20 +48,21 @@ const Scrollimage: React.FC = () => {
                 // Aspect Ratio: 16/9 มาตรฐาน
                 className="relative aspect-video w-full"
               >
-                {/* Gradient Overlay: ปรับให้เข้มขึ้นเล็กน้อยด้านล่างเพื่อให้ตัวหนังสือชัด */}
+                {/* Layer 1: Gradient Overlay (z-10) - ปรับให้เข้มขึ้นด้านล่างเพื่อให้ตัวหนังสือชัด */}
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
+                {/* Layer 0: Image */}
                 <Image
                   src={src}
                   alt={`KTLTC Activity Slide ${index + 1}`}
                   fill
-                  // ✅ Fix: โหลดด่วนเฉพาะรูปแรก (Index 0) รูปอื่นให้โหลดทีหลัง
+                  // ✅ Optimization: โหลดรูปแรกทันที (Priority) รูปอื่นโหลดแบบ Lazy
                   priority={index === 0}
                   className="object-cover object-center"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                 />
 
-                {/* Text Overlay */}
+                {/* Layer 2: Text Overlay (z-20) */}
                 <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 z-20 text-white hidden md:block">
                   <motion.h2
                     initial={{ opacity: 0, x: -20 }}
@@ -79,7 +78,7 @@ const Scrollimage: React.FC = () => {
           </Carousel>
         </div>
 
-        {/* CSS Override for Ant Design Carousel Arrows */}
+        {/* CSS Override สำหรับปุ่มลูกศรและจุดของ Ant Design Carousel */}
         <style jsx global>{`
           /* 1. จัดตำแหน่งจุด (Dots) */
           .custom-carousel-fix .slick-dots {
@@ -92,7 +91,7 @@ const Scrollimage: React.FC = () => {
             background: #fff !important;
           }
 
-          /* 2. ปรับแต่งปุ่มลูกศร */
+          /* 2. ปรับแต่งปุ่มลูกศร (Arrows) */
           .custom-carousel-fix .slick-prev,
           .custom-carousel-fix .slick-next {
             top: 50% !important;
@@ -111,7 +110,7 @@ const Scrollimage: React.FC = () => {
             transition: all 0.3s ease;
           }
 
-          /* สร้างลูกศรด้วย CSS Pure */
+          /* สร้างรูปลูกศรด้วย CSS Pure (Chevron) */
           .custom-carousel-fix .slick-prev::after,
           .custom-carousel-fix .slick-next::after {
             content: "" !important;
@@ -120,16 +119,16 @@ const Scrollimage: React.FC = () => {
             height: 10px !important;
             border-top: 2.5px solid white !important;
             border-right: 2.5px solid white !important;
-            transform: rotate(-135deg) !important; /* ซ้าย */
+            transform: rotate(-135deg) !important; /* ลูกศรชี้ซ้าย */
             margin-left: 4px !important;
           }
 
           .custom-carousel-fix .slick-next::after {
-            transform: rotate(45deg) !important; /* ขวา */
+            transform: rotate(45deg) !important; /* ลูกศรชี้ขวา */
             margin-left: -4px !important;
           }
 
-          /* แสดงปุ่มเมื่อเอาเมาส์วาง */
+          /* แสดงปุ่มเมื่อเอาเมาส์วาง (Hover Group) */
           .custom-carousel-fix.group:hover .slick-prev {
             left: 20px;
             opacity: 1;
@@ -146,6 +145,7 @@ const Scrollimage: React.FC = () => {
             border-color: #f97316 !important;
           }
 
+          /* ซ่อนปุ่มบนมือถือ */
           @media (max-width: 768px) {
             .custom-carousel-fix .slick-prev,
             .custom-carousel-fix .slick-next {

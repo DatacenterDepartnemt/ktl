@@ -5,73 +5,87 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+// นำเข้า CSS สำหรับ Ant Design patch, Syntax Highlight, และ Global Styles
 import "@ant-design/v5-patch-for-react-19";
 import "../styles/prism-vsc-dark-plus.css";
 import "../styles/index.css";
 import "../styles/globals.css";
 
+// 1. ตั้งค่าฟอนต์หลักของเว็บ (Prompt) จาก Google Fonts
+// การใช้ next/font ช่วยลด Layout Shift และโหลดฟอนต์ได้รวดเร็ว
 const prompt = Prompt({
-  subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-prompt",
-  display: "swap",
+  subsets: ["thai", "latin"], // รองรับภาษาไทยและอังกฤษ
+  weight: ["300", "400", "500", "600", "700"], // น้ำหนักฟอนต์ที่ใช้
+  variable: "--font-prompt", // กำหนด CSS variable เพื่อเรียกใช้ใน Tailwind
+  display: "swap", // ให้แสดงฟอนต์สำรองก่อนจนกว่าฟอนต์จริงจะโหลดเสร็จ
 });
 
-// ✅ ปรับปรุง Metadata เพื่อให้รองรับ Favicon และ OG Image
+// 2. กำหนด Metadata สำหรับ SEO และการแชร์ลง Social Media (Open Graph)
 export const metadata: Metadata = {
-  title: "KTLTC - วิทยาลัยเทคนิคกันทรลักษ์",
-  description: "ระบบบริหารจัดการข่าวสารและข้อมูลวิทยาลัย",
-  // เพิ่ม Favicon
+  title: "KTLTC - วิทยาลัยเทคนิคกันทรลักษ์", // ชื่อที่จะขึ้นบน Tab Browser
+  description: "ระบบบริหารจัดการข่าวสารและข้อมูลวิทยาลัย", // คำอธิบายเว็บสำหรับ Search Engine
+
+  // ไอคอนเว็บ (Favicon) ที่จะขึ้นบน Tab Browser
   icons: {
-    icon: "/images/favicon.ico", // ตรวจสอบว่ามีไฟล์ที่ public/images/favicon.ico
+    icon: "/images/favicon.ico",
     shortcut: "/images/favicon.ico",
-    apple: "/images/logo.png", // แนะนำให้มีรูปโลโก้ PNG สำหรับ Apple Devices
+    apple: "/images/logo.png", // ไอคอนสำหรับ iOS (Add to Home Screen)
   },
-  // เพิ่ม Open Graph (รูปเวลาแชร์ลิงก์)
+
+  // ข้อมูลสำหรับแสดงผลเมื่อแชร์ลิงก์ลง Facebook, LINE, Twitter
   openGraph: {
     title: "วิทยาลัยเทคนิคกันทรลักษ์ | KTLTC",
     description: "ระบบบริหารจัดการข่าวสารและข้อมูลวิทยาลัยเทคนิคกันทรลักษ์",
-    url: "https://ktltc.vercel.app", // URL จริงของเว็บ
+    url: "https://ktltc.vercel.app", // ลิงก์เว็บไซต์จริง
     siteName: "KTLTC",
     images: [
       {
-        url: "/images/og-image.png", // ⚠️ อย่าลืมเอารูปขนาด 1200x630px ไปวางที่ public/images/
+        url: "/images/og-image.png", // รูปภาพที่จะโชว์ตอนแชร์ลิงก์
         width: 1200,
         height: 630,
         alt: "KTLTC Preview Image",
       },
     ],
-    locale: "th_TH",
+    locale: "th_TH", // ภาษาไทย
     type: "website",
   },
 };
 
+// 3. ฟังก์ชัน RootLayout: โครงสร้างหลักของหน้าเว็บ
 export default function RootLayout({
-  children,
+  children, // children คือเนื้อหาของแต่ละหน้า (Page) ที่จะถูกแทรกเข้ามาตรงกลาง
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    // ✅ เพิ่ม suppressHydrationWarning เพื่อแก้ Error หน้าจอแดง (คงเดิม)
+    // suppressHydrationWarning ใส่ไว้เพื่อแก้ Error ที่เกิดจาก ThemeProvider (Dark Mode)
+    // เพราะ Server กับ Client อาจเรนเดอร์ class ต่างกันเล็กน้อยในตอนแรก
     <html lang="th" suppressHydrationWarning>
       <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        {/* ลิงก์ฟอนต์เพิ่มเติมจาก Google Fonts แบบ Manual (นอกเหนือจาก next/font) */}
         <link
           href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;600&family=Chakra+Petch:wght@300;400;600&family=Lato:wght@300;400;700&family=Mali:wght@300;400;600&family=Mitr:wght@300;400&family=Montserrat:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Prompt:wght@300;400;600&family=Roboto:wght@300;400;700&family=Sarabun:wght@300;400;600&family=Taviraj:wght@300;400&display=swap"
           rel="stylesheet"
         />
       </head>
+
+      {/* body: เรียกใช้ฟอนต์ Prompt และกำหนดสีพื้นหลัง/ตัวหนังสือพื้นฐาน */}
       <body className={`${prompt.className} ${prompt.variable} antialiased`}>
+        {/* ThemeProvider: ตัวจัดการ Dark Mode / Light Mode */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="system" // เริ่มต้นตามการตั้งค่าของเครื่องผู้ใช้
           enableSystem
           disableTransitionOnChange
         >
+          {/* Navbar: เมนูด้านบน (จะแสดงทุกหน้า) */}
           <Navbar />
+          {/* children: เนื้อหาของหน้าที่เราเปิดอยู่ (เช่น หน้า Home, หน้า News) */}
           {children}
-          <SpeedInsights />
-          <Analytics />
+          {/* เครื่องมือเก็บสถิติของ Vercel */}
+          <SpeedInsights /> {/* วัดความเร็วเว็บ */}
+          <Analytics /> {/* วัดจำนวนคนเข้าชม */}
+          {/* Footer: ส่วนท้ายเว็บ (จะแสดงทุกหน้า) */}
           <Footer />
         </ThemeProvider>
       </body>

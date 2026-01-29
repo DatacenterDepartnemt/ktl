@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { FileTextOutlined, SafetyCertificateOutlined } from "@ant-design/icons";
-import Link from "next/link";
 
 const ExternalQualityAssurance = () => {
   return (
@@ -22,12 +21,14 @@ const ExternalQualityAssurance = () => {
           <span className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold tracking-wide text-blue-600 uppercase dark:bg-blue-900/30 dark:text-blue-300">
             Quality Assurance
           </span>
+
           {/* Heading: สีขาวใน Dark Mode */}
           <h2 className="text-3xl font-extrabold text-slate-800 md:text-4xl dark:text-white">
             การรับรองมาตรฐาน{" "}
             <span className="text-blue-600 dark:text-blue-400">&</span>{" "}
             ความโปร่งใส
           </h2>
+
           {/* Description: สีเทาอ่อนใน Dark Mode */}
           <p className="mt-4 text-slate-500 dark:text-slate-400">
             รายงานผลการประกันคุณภาพภายนอก และการประเมินคุณธรรมและความโปร่งใส
@@ -46,13 +47,11 @@ const ExternalQualityAssurance = () => {
           {/* Card 1: ประกันคุณภาพ (Official Style) */}
           <Link
             href="/pdf/งานประกันฯ/ฉบับจริงรายงานการประกันภายนอกรอบ5.pdf"
+            target="_blank" // แนะนำให้เปิด PDF ในแท็บใหม่
+            rel="noopener noreferrer"
             className="group block h-full"
           >
-            {/* Card Container:
-                - bg-white -> dark:bg-zinc-900
-                - border-slate-200 -> dark:border-zinc-800
-                - hover borders ปรับให้เข้มขึ้นใน dark mode
-            */}
+            {/* Card Container styling with Dark Mode support */}
             <article className="relative flex h-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/30 dark:hover:shadow-blue-900/20">
               {/* Decorative Icon Background */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-50 opacity-50 blur-2xl transition-opacity group-hover:opacity-100 dark:bg-blue-900/20" />
@@ -85,7 +84,7 @@ const ExternalQualityAssurance = () => {
                 วิทยาลัยเทคนิคกันทรลักษ์ (รอบ 5)
               </p>
 
-              {/* Link Text */}
+              {/* Link Text with Animation */}
               <span className="mt-auto inline-flex items-center text-sm font-semibold text-blue-600 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 dark:text-blue-400">
                 ดาวน์โหลดเอกสาร PDF &rarr;
               </span>
@@ -95,6 +94,8 @@ const ExternalQualityAssurance = () => {
           {/* Card 2: ITA (Transparency Style) */}
           <Link
             href="https://ktltc.vercel.app/ITA"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group block h-full"
           >
             <article className="relative flex h-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-cyan-200 hover:shadow-xl hover:shadow-cyan-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-cyan-500/30 dark:hover:shadow-cyan-900/20">
@@ -129,7 +130,7 @@ const ExternalQualityAssurance = () => {
                 การประเมินคุณธรรมและความโปร่งใสในการดำเนินงาน
               </p>
 
-              {/* Link Text */}
+              {/* Link Text with Animation */}
               <span className="mt-auto inline-flex items-center text-sm font-semibold text-cyan-600 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 dark:text-cyan-400">
                 เข้าสู่เว็บไซต์ ITA &rarr;
               </span>

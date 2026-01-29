@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import NextImage from "next/image";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -92,17 +92,19 @@ export default function WelcomePage() {
         className="relative z-10 container mx-auto max-w-7xl px-4 lg:px-8"
       >
         <div className="grid gap-12 lg:grid-cols-12 lg:items-start lg:gap-8">
-          {/* --- Left Column: Director Spotlight --- */}
+          {/* --- Left Column: Director Spotlight (3D Card) --- */}
           <div className="flex flex-col items-center justify-center lg:col-span-5 lg:justify-start">
             <CardContainer className="inter-var w-full max-w-sm lg:max-w-md">
               {/* Card Body: ปรับพื้นหลังและขอบใน Dark Mode */}
               <CardBody className="group/card relative h-auto w-auto rounded-3xl border border-white/40 bg-white/60 p-6 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-blue-500/20 dark:border-white/10 dark:bg-slate-900/60 dark:hover:shadow-blue-900/40">
+                {/* Badge Layer (Z=30) */}
                 <CardItem translateZ="30" className="mb-4">
-                  {/* Badge: ปรับสีใน Dark Mode */}
                   <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold tracking-wider text-blue-600 uppercase dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300">
                     KTLTC Director
                   </span>
                 </CardItem>
+
+                {/* Name Layer (Z=50) */}
                 <CardItem
                   translateZ="50"
                   className="text-3xl font-extrabold text-slate-800 dark:text-slate-100"
@@ -111,6 +113,8 @@ export default function WelcomePage() {
                     นางสาวทักษิณา ชมจันทร์
                   </span>
                 </CardItem>
+
+                {/* Role Layer (Z=60) */}
                 <CardItem
                   as="p"
                   translateZ="60"
@@ -118,10 +122,12 @@ export default function WelcomePage() {
                 >
                   ผู้อำนวยการวิทยาลัยเทคนิคกันทรลักษ์
                 </CardItem>
+
+                {/* Image Layer (Z=80 - ลอยออกมามากที่สุด) */}
                 <CardItem translateZ="80" className="mt-8 w-full">
                   <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5 dark:ring-white/10">
                     <NextImage
-                      src="/images/ปก/3.webp"
+                      src="/images/banners/3.webp"
                       alt="Director Image"
                       width={500}
                       height={625}

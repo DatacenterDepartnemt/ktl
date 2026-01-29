@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Image } from "@heroui/image";
 import { Card, Tabs, Tab } from "@heroui/react";
 import { motion } from "framer-motion";
 import {
@@ -10,7 +9,6 @@ import {
   FormOutlined,
   EnvironmentOutlined,
   GlobalOutlined,
-  FacebookFilled,
 } from "@ant-design/icons";
 
 const Features = () => {
@@ -25,7 +23,7 @@ const Features = () => {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
-        className="relative z-10 "
+        className="relative z-10"
       >
         {/* --- Header --- */}
         <div className="mb-12 text-center">
@@ -199,23 +197,27 @@ const ServiceCard = ({
   icon: React.ReactNode;
   title: string;
   desc: string;
-}) => (
-  <Link
-    href={href}
-    target={href.startsWith("http") ? "_blank" : "_self"}
-    className="group relative flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:bg-blue-50 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:hover:border-neutral-600"
-  >
-    {/* Icon Wrapper: พื้นหลังเข้มใน dark mode */}
-    <div className="mb-4 rounded-full bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-transform group-hover:scale-110 dark:bg-neutral-900 dark:ring-neutral-700">
-      {icon}
-    </div>
-    {/* Title: สีขาวใน dark mode */}
-    <h3 className="text-lg font-bold text-slate-700 group-hover:text-blue-600 dark:text-slate-200 dark:group-hover:text-blue-400">
-      {title}
-    </h3>
-    {/* Desc: สีเทาอ่อนใน dark mode */}
-    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{desc}</p>
-  </Link>
-);
+}) => {
+  const isExternal = href.startsWith("http");
+  return (
+    <Link
+      href={href}
+      target={isExternal ? "_blank" : "_self"}
+      rel={isExternal ? "noopener noreferrer" : undefined} // ✅ Security Fix
+      className="group relative flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:bg-blue-50 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:hover:border-neutral-600"
+    >
+      {/* Icon Wrapper: พื้นหลังเข้มใน dark mode */}
+      <div className="mb-4 rounded-full bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-transform group-hover:scale-110 dark:bg-neutral-900 dark:ring-neutral-700">
+        {icon}
+      </div>
+      {/* Title: สีขาวใน dark mode */}
+      <h3 className="text-lg font-bold text-slate-700 group-hover:text-blue-600 dark:text-slate-200 dark:group-hover:text-blue-400">
+        {title}
+      </h3>
+      {/* Desc: สีเทาอ่อนใน dark mode */}
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{desc}</p>
+    </Link>
+  );
+};
 
 export default Features;
