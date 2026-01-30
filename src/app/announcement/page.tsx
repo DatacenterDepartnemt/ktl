@@ -31,7 +31,7 @@ async function getAnnouncements(): Promise<NewsItem[]> {
       .collection("news")
       .find(query)
       .sort({ createdAt: -1 })
-      .limit(20)
+      .limit(4)
       .toArray();
 
     return JSON.parse(JSON.stringify(news));

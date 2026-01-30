@@ -27,22 +27,22 @@ export default function Home() {
         </div>
 
         {/* 2. Scroll Image: ส่วนแสดงรูปภาพสไลด์ หรือ Banner หลักด้านบน */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Scrollimage />
         </div>
 
         {/* 3. Student Support: ระบบดูแลช่วยเหลือผู้เรียน */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <StudentSupportSystem />
         </div>
 
         {/* 4. QA / ITA: ส่วนการประกันคุณภาพภายนอก และการประเมินคุณธรรม (ITA) */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <ExternalQualityAssurance />
         </div>
 
         {/* 5. Features: เมนูลัด หรือฟีเจอร์เด่นของวิทยาลัย (เช่น ศูนย์ราชการสะดวก, สมัครเรียน) */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Features />
         </div>
 
@@ -57,27 +57,27 @@ export default function Home() {
         </div>
 
         {/* 8. Background Effect: ส่วนตกแต่งพิเศษ (Beams/Collision) อาจเป็นส่วนไว้อาลัยหรือแบนเนอร์พิเศษ */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <BackgroundBeamsWithCollisionDemo />
         </div>
 
         {/* 9. Press Release: ข่าวประชาสัมพันธ์ล่าสุด */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <PressRelease />
         </div>
 
         {/* 10. Newsletter: จดหมายข่าวประจำเดือน */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Newsletter />
         </div>
 
         {/* 11. Announcement: ข่าวประกาศทั่วไป (เช่น ประกาศสอบ, ประกาศหยุดเรียน) */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Announcement />
         </div>
 
         {/* 12. Facebook Feed: แสดงโพสต์จากหน้าเพจ Facebook ของวิทยาลัย */}
-        <div className="py-6 px-4 max-w-7xl mx-auto">
+        <div className="px-4 max-w-7xl mx-auto">
           <ShowFacebook />
         </div>
 
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* 15. Q&A / SubQA: กระดานถาม-ตอบ หรือส่วนรับฟังความคิดเห็น */}
-        <div className="py-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <SubQAPage />
         </div>
       </main>
