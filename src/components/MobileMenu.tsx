@@ -89,7 +89,7 @@ export default function MobileMenu({
   const safeMenuTree = menuTree || [];
 
   return (
-    <div className="md:hidden">
+    <div className="xl:hidden">
       {/* ปุ่ม Hamburger */}
       <button
         onClick={() => setIsOpen(!isOpen)}

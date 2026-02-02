@@ -16,32 +16,26 @@ export default function page() {
       <p className="text-xl">File PDF</p>
       <div className="grid gap-4 py-4">
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="/images/ita/pdf/o14-1.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               01. สรุปข้อมูลการให้บริการตรวจรถประจำวัน
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="/images/ita/pdf/o14-2.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               02. fix it center 18 มิถุนายน 2568
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <p className="pt-4 text-xl">Link Wab Page</p>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://vecrsa.vec.go.th/index.php">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               03. สถานที่ตั้งศูนย์อาชีวะอาสาทั่วประเทศ จำนวน 150 ศูนย์
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
       </div>
     </>

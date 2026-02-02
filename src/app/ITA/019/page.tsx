@@ -20,22 +20,18 @@ export default function page() {
       <div className="grid gap-4 py-4">
         <p className="text-xl">File PDF</p>
         <div>
-          {" "}
           <LinkPreview url="/images/ita/pdf/ประกาศจัดทำแผน_อุปกรณ์การเรียนของนักเรีย.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1. ประกาศจัดทำแผน อุปกรณ์การเรียนของนักเรีย
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <p className="pt-4 text-xl">Link Wab Page</p>
         <div>
-          {" "}
           <LinkPreview url="https://www.gprocurement.go.th/new_index.html">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               2. เว็บไซต์ pgrocurement ระบบการจัดซื้อจัดจ้างภาครัฐ
-            </p>{" "}
+            </p>
           </LinkPreview>
         </div>
         <Image
@@ -44,7 +40,7 @@ export default function page() {
           alt={"o19"}
           width={500}
           height={500}
-        />{" "}
+        />
       </div>
     </>
   );

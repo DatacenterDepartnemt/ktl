@@ -24,23 +24,19 @@ export default function page() {
       <p className="pt-4 text-xl">File PDF</p>
       <div className="grid gap-4 py-4">
         <div>
-          {" "}
           <LinkPreview url="/images/ita/pdf/o25-โรงการอบรมเชิงปฏิบัติการในหัวข้อหัวใจ.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1. โครงการอบรมเชิงปฏิบัติการในหัวข้อ "หัวใจในการบริการ
               เพื่อยกระดับคุณภาพการจัดการศึกาา วิทยาลัยเทคนิคกันทรลักษ์ ปี 2568"
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div>
-          {" "}
           <LinkPreview url="/images/ita/pdf/o25-ประเมินผลโครงการพัฒนาระบบประกันฯ.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               2. ประเมินผลโครงการพัฒนาระบบประกันฯ"
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
       </div>
     </>

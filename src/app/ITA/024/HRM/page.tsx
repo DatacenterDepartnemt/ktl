@@ -72,10 +72,9 @@ export default function HRM() {
         </div>
 
         <p className="pb-6 text-xs text-blue-500 md:text-sm lg:text-base dark:text-blue-400">
-          {" "}
           5. การสร้างขวัญกําลังใจ เช่น
           การขอพระราชทานเครื่องราชอิสริยาภรณ์,การแสดงความยินดีครูและบุคลากรทางการศึกษาที่ผ่านการเลื่อนวิทยฐานะที่สูงขึ้น,การเชิดชูเกียรติครูและบุคลากรดีเด่น
-          เป็นต้น{" "}
+          เป็นต้น
         </p>
         <div className="flex justify-center pt-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">

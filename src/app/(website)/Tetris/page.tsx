@@ -197,7 +197,7 @@ export default function Tetris() {
           TETRIS
         </h1>
         <div className="mt-2 rounded-full border border-slate-600 bg-slate-800 px-6 py-1 text-xl font-bold shadow-lg shadow-blue-500/10">
-          SCORE:{" "}
+          SCORE:
           <span className="text-yellow-400">{score.toLocaleString()}</span>
         </div>
       </div>

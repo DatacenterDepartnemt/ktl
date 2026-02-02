@@ -51,7 +51,7 @@ export default async function NewsletterPage() {
       {/* --- Header Section --- */}
       <section className="pt-16 pb-10 text-center px-4">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">
-          <span className="text-slate-800 dark:text-white">จดหมายข่าว</span>{" "}
+          <span className="text-slate-800 dark:text-white">จดหมายข่าว</span>
           <span className="text-yellow-500">ประชาสัมพันธ์</span>
         </h1>
         <p className="text-slate-500 text-sm md:text-base dark:text-slate-400">

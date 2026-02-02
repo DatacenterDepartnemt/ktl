@@ -27,8 +27,8 @@ const StudentSupportSystem = () => {
 
           {/* Heading: สีขาวใน dark mode */}
           <h2 className="text-3xl font-extrabold text-black md:text-4xl dark:text-white">
-            ระบบดูแลช่วยเหลือ{" "}
-            <span className="text-red-500 dark:text-red-400">&</span>{" "}
+            ระบบดูแลช่วยเหลือ
+            <span className="text-red-500 dark:text-red-400">&</span>
             คุ้มครองนักเรียน
           </h2>
 

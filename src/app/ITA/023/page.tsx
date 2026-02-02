@@ -18,35 +18,29 @@ export default function page() {
       <p className="pt-4 text-xl">File PDF</p>
       <div className="grid gap-4 py-4">
         <div>
-          {" "}
           <Link href="/images/ita/pdf/o23-โครงการอบรมเชิงปฏิบัติการขยายผลการประ.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1.
               โครงการอบรมเชิงปฏิบัติการขยายผลการประเมินคูณธรรมและความโปร่งใสในการดำเนินงาน
-              (ITA){" "}
-            </p>{" "}
-          </Link>{" "}
+              (ITA)
+            </p>
+          </Link>
         </div>
         <div>
-          {" "}
           <Link href="/images/ita/pdf/o23-โครงการพัฒนาระบบการประกันคุณภาพฯ.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               2. โครงการพัฒนาระบบการประกันคุณภาพและมาตรฐานการศึกษา
               ประจำปีการศึกษา 2568
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
         <div>
-          {" "}
           <Link href="/images/ita/pdf/o23-โรงการอบรมเชิงปฏิบัติการในหัวข้อหัวใจใ.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               3. โรงการอบรมเชิงปฏิบัติการในหัวข้อหัวใจในการบริการ
               เพื่อยกระดับคุณภาพการจัดการศึกษา วิทยาลัยเทคนิคกันทรลักษ์ ปี 2568
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
       </div>
     </>

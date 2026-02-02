@@ -24,8 +24,8 @@ const ExternalQualityAssurance = () => {
 
           {/* Heading: สีขาวใน Dark Mode */}
           <h2 className="text-3xl font-extrabold text-slate-800 md:text-4xl dark:text-white">
-            การรับรองมาตรฐาน{" "}
-            <span className="text-blue-600 dark:text-blue-400">&</span>{" "}
+            การรับรองมาตรฐาน
+            <span className="text-blue-600 dark:text-blue-400">&</span>
             ความโปร่งใส
           </h2>
 

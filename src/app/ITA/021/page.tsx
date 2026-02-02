@@ -6,7 +6,7 @@ export default function page() {
     <>
       <div className="pb-6 text-xs text-blue-500 md:text-sm lg:text-base dark:text-blue-400">
         – แสดงสรุปผลการจัดซื้อจัดจ้างของสถานศึกษา
-        <br />– มีข้อมูลรายละเอียดผลการจัดซื้อจัดจ้าง อย่างน้อยประกอบด้วย ดังนี้{" "}
+        <br />– มีข้อมูลรายละเอียดผลการจัดซื้อจัดจ้าง อย่างน้อยประกอบด้วย ดังนี้
         <br />
         1. ชื่อหน่วยงาน <br />
         2. งานที่ซื้อหรือจ้าง <br />
@@ -25,13 +25,11 @@ export default function page() {
 
       <p className="pt-4 text-xl">File PDF</p>
       <div className="py-4">
-        {" "}
         <Link href="/images/ita/pdf/o-21.pdf">
-          {" "}
           <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
             1. สรุปผลการดำเนินการจัดซื้อจัดจ้าง
-          </p>{" "}
-        </Link>{" "}
+          </p>
+        </Link>
       </div>
     </>
   );

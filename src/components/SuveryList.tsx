@@ -213,7 +213,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             คุณต้องการลบข้อมูลของ <br />
             <span className="text-base font-semibold text-gray-800 dark:text-gray-200">
               "{fullName}"
-            </span>{" "}
+            </span>
             <br />
             ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
           </p>

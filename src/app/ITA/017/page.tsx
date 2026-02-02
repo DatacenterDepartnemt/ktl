@@ -16,13 +16,11 @@ export default function page() {
 
       <p className="text-xl">File PDF</p>
       <div className="py-4">
-        {" "}
         <LinkPreview url="/images/ita/pdf/017-งบหน้า68.pdf">
-          {" "}
           <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
             1. งบหน้ารายจ่ายตามแผนงาน/งาน/โครงการ/ ประจำปีงบประมาณ 2568
-          </p>{" "}
-        </LinkPreview>{" "}
+          </p>
+        </LinkPreview>
       </div>
     </>
   );

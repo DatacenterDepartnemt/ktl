@@ -656,7 +656,7 @@ export default function GECCPage() {
           <div className="space-y-8 lg:col-span-4">
             <Card className="overflow-hidden border border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50 pb-2 font-bold text-slate-700">
-                <YoutubeOutlined className="mr-2 text-xl text-red-600" />{" "}
+                <YoutubeOutlined className="mr-2 text-xl text-red-600" />
                 วิดีโอแนะนำศูนย์
               </CardHeader>
               <CardBody className="bg-black p-0">
@@ -670,7 +670,7 @@ export default function GECCPage() {
             </Card>
             <Card className="border border-slate-200 shadow-md">
               <CardHeader className="border-b border-slate-100 bg-slate-50 pb-2 font-bold text-slate-700">
-                <FacebookFilled className="mr-2 text-xl text-blue-600" />{" "}
+                <FacebookFilled className="mr-2 text-xl text-blue-600" />
                 ประชาสัมพันธ์
               </CardHeader>
               <CardBody className="bg-white flex justify-center overflow-hidden p-0">

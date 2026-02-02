@@ -438,7 +438,6 @@ export default function AddNewsPage() {
 
         {/* --- Card 2: รูปภาพทั่วไป --- */}
         <section className="rounded-3xl space-y-6">
-          {" "}
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-700 flex items-center gap-2 dark:text-slate-200">
               <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm dark:bg-blue-900/30 dark:text-blue-400">

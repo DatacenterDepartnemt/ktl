@@ -16,22 +16,18 @@ export default function page() {
 
       <p className="text-xl">File PDF</p>
       <div className="py-4">
-        {" "}
         <Link href="/images/ita/pdf/รายงานสรุปสำรวจความพึ่งพอใจของผู้รับบริ.pdf">
-          {" "}
           <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
             1. รายงานสรุปผลสำรวจความพึ่งพอใจของผู้รับบริการศูนย์ราชการสะดวก
-          </p>{" "}
-        </Link>{" "}
+          </p>
+        </Link>
       </div>
       <div>
-        {" "}
         <Link href="/images/ita/pdf/แบบสำรวจสำรวจความพึ่งพอใจของผู้รับบริกา.pdf">
-          {" "}
           <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
             2. แบบสำรวจความพึ่งพอใจของผู้รับบริการศูนย์ราชการสะดวก
-          </p>{" "}
-        </Link>{" "}
+          </p>
+        </Link>
       </div>
     </>
   );

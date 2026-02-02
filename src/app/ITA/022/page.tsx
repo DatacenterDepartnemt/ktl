@@ -18,13 +18,11 @@ export default function page() {
 
       <p className="pt-4 text-xl">File PDF</p>
       <div className="py-4">
-        {" "}
         <Link href="/images/ita/pdf/o22.pdf">
-          {" "}
           <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
             1. แสดงผลการจัดซื้อจัดจ้างของสถานศึกษา PDF
-          </p>{" "}
-        </Link>{" "}
+          </p>
+        </Link>
       </div>
     </>
   );

@@ -9,39 +9,33 @@ export default function page() {
         รหัสวิชา 20000-2003 รายวิชากิจกรรมเสริมสร้างสุจริต จิตอาสา และระดับ ปวส.
         รหัสวิชา 30000-2001 รายวิชากิจกรรมเสริมสร้างสุจริต จิตอาสา หรือ
         กิจกรรมที่เกี่ยวข้องกับการเสริมสร้างวัฒนธรรมองค์ที่เกี่ยวข้องกับการป้องกันการทุจริตในรูปแบบ
-        อื่น ๆ เช่น โครงการ/กิจกรรม, แนวทางปฏิบัติ,ประกาศนโยบายไม่รับของขวัญ ฯลฯ{" "}
+        อื่น ๆ เช่น โครงการ/กิจกรรม, แนวทางปฏิบัติ,ประกาศนโยบายไม่รับของขวัญ ฯลฯ
         <br />
       </div>
 
       <p className="pt-4 text-xl">File PDF</p>
       <div className="grid gap-4 py-4">
         <div>
-          {" "}
           <Link href="/images/ita/pdf/o33-แนวทางการจัดกิจกรรมเสริมสร้างสุจริต.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1. แนวทางการจัดกิจกรรมเสริมสร้างสุจริต จิตอาสา
               ระดับประกาศนียบัตรวิชาชีพชั้นสูง (ปวส)
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
         <div>
-          {" "}
           <Link href="/images/ita/pdf/ปวช.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               2. หลักสูตร ประกาศนียบัตรวิชาชีพ ปวช PDF
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
         <div>
-          {" "}
           <Link href="/images/ita/pdf/ปวส.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               3. หลักสูตร ประกาศนียบัตรวิชาชีพ ปวส PDF
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
       </div>
 

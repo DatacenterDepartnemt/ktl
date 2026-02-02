@@ -58,13 +58,13 @@ export default function NavbarClient({
             priority
             className="w-10 h-10 md:w-11 md:h-11"
           />
-          <span className="hidden sm:block text-zinc-800 dark:text-white font-extrabold tracking-tighter text-xl">
+          <span className="  text-zinc-800 dark:text-white font-extrabold tracking-tighter text-xl">
             KTLTC
           </span>
         </Link>
 
         {/* --- 2. DESKTOP MENU (กลาง - ซ่อนในมือถือ) --- */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden xl:flex items-center gap-6">
           <Link
             href="/"
             className="text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
@@ -127,7 +127,7 @@ export default function NavbarClient({
           <ThemeToggle />
 
           {/* ✅ User Profile / Login Button (เฉพาะ Desktop) */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-4">
             {username ? (
               <div
                 className="relative"
@@ -209,7 +209,7 @@ export default function NavbarClient({
           </div>
 
           {/* ✅ Mobile Menu (Hamburger - เฉพาะ Mobile) */}
-          <div className="md:hidden">
+          <div className="xl:hidden">
             <MobileMenu menuTree={menuTree} />
           </div>
         </div>

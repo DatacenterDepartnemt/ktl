@@ -15,49 +15,39 @@ export default function page() {
       <p className="text-xl">Link Wab Page</p>
       <div className="grid gap-4 py-4">
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://ktltc.vercel.app/pressrelease">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1. ข่าวประชาสัมพันธ์
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://ktltc.vercel.app/newsletter">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               2. จดหมายข่าว
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://ktltc.vercel.app/announcement">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               3. ข่าวประกาศ
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://ktltc.vercel.app/bidding">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               4. ข่าวประกวดราคา
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
         <div className="hover:text-blue-500 dark:hover:text-blue-400">
-          {" "}
           <LinkPreview url="https://ktltc.vercel.app/technicalcollegeorders">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               5. คำสั่งวิทยาลัยเทคนิค
-            </p>{" "}
-          </LinkPreview>{" "}
+            </p>
+          </LinkPreview>
         </div>
       </div>
     </>

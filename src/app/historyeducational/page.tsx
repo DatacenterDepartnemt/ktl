@@ -54,8 +54,8 @@ export default function HistoryEducational() {
 
           <article className="prose prose-lg dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
             <p className="indent-8 leading-relaxed">
-              วิทยาลัยเทคนิคกันทรลักษ์ เดิมเป็น{" "}
-              <strong>"วิทยาลัยการอาชีพกันทรลักษ์"</strong>{" "}
+              วิทยาลัยเทคนิคกันทรลักษ์ เดิมเป็น
+              <strong>"วิทยาลัยการอาชีพกันทรลักษ์"</strong>
               ได้จัดตั้งขึ้นตามนโยบายรัฐบาลเพื่อขยายโอกาสทางการศึกษาวิชาชีพสู่ชนบท
               จังหวัดศรีสะเกษ ได้ทำหนังสือถึงกรมอาชีวศึกษา เมื่อวันที่ 10
               มิถุนายน 2534
@@ -77,7 +77,7 @@ export default function HistoryEducational() {
               </h3>
               <ul className="list-disc space-y-2 pl-5 text-sm md:text-base">
                 <li>
-                  <strong>30 มีนาคม 2537:</strong>{" "}
+                  <strong>30 มีนาคม 2537:</strong>
                   กระทรวงศึกษาธิการประกาศจัดตั้งวิทยาลัย พร้อมงบประมาณ 28.7
                   ล้านบาท
                 </li>

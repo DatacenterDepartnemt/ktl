@@ -297,7 +297,7 @@ export default async function NewsDetailPage({
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ประมวลภาพกิจกรรม{" "}
+                  ประมวลภาพกิจกรรม
                   <span className="text-slate-400 font-normal text-lg ml-2">
                     ({news.images.length})
                   </span>

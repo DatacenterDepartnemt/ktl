@@ -39,52 +39,42 @@ export default function page() {
       <div className="grid gap-6 pt-4">
         <div className="grid gap-2">
           <div>
-            {" "}
             <Link href="/images/ita/pdf/ประกาศรับสมัครเจ้าหน้าที่งานสื่อ+นักการ.pdf">
-              {" "}
               <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
                 1. ประกาศรับสมัครลูกจ้างชั่วคราว ตำแหน่ง เจ้าหน้าที่ธุรการ
                 งานสื่อ+นักการ
-              </p>{" "}
-            </Link>{" "}
+              </p>
+            </Link>
           </div>
           <div>
-            {" "}
             <Link href="/images/ita/pdf/ประกาศรับสมัครลูกจ้างชั่วคราวรายเดือน.pdf">
-              {" "}
               <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
                 2. ประกาศรับสมัครลูกจ้างชั่วคราวรายเดือน ตำแหน่ง ครูพิเศษสอน
                 สาขาช่างชนต์
-              </p>{" "}
-            </Link>{" "}
+              </p>
+            </Link>
           </div>
           <div>
-            {" "}
             <Link href="/images/ita/pdf/ประกาศรับสมัครลูกจ้างชั่วคราว.pdf">
-              {" "}
               <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
                 3. ประกาศรับสมัครลูกจ้างชั่วคราว ตำแหน่ง ครูพิเศษสอน
                 สาขาช่างไฟฟ้ากำลัง
-              </p>{" "}
-            </Link>{" "}
+              </p>
+            </Link>
           </div>
           <div>
-            {" "}
             <Link href="/images/ita/pdf/ประกาศรับสมัครลูกจ้างชั่วคราวตน.pdf">
-              {" "}
               <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
-                4. ประกาศรับสมัครลูกจ้างชั่วคราว ตำแหน่ง นักการ ภาโรง{" "}
-              </p>{" "}
-            </Link>{" "}
+                4. ประกาศรับสมัครลูกจ้างชั่วคราว ตำแหน่ง นักการ ภาโรง
+              </p>
+            </Link>
           </div>
           <div>
-            {" "}
             <Link href="/images/ita/pdf/ประกาศรับสมัครครูพิเศษสอน.pdf">
-              {" "}
               <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
                 5. ประกาศรับสมัครครูพิเศษสอน สาขาวิชาการจัดการโลจิสติกส์
-              </p>{" "}
-            </Link>{" "}
+              </p>
+            </Link>
           </div>
         </div>
         <p className="pt-2 text-xs text-blue-500 md:text-sm lg:text-base dark:text-blue-400">
@@ -93,13 +83,11 @@ export default function page() {
           <br />
         </p>
         <div>
-          {" "}
           <Link href="/images/ita/pdf/แบบประเมินผลการปฏิบัติงานตำแหน่งพนักงาน.pdf">
-            {" "}
             <p className="text-3 md:text-3.5 hover:text-orange-500 sm:text-sm md:text-base dark:hover:text-orange-400">
               1. แบบประเมินผลการปฏิบัติงานตำแหน่งพนักงานราชการ
-            </p>{" "}
-          </Link>{" "}
+            </p>
+          </Link>
         </div>
 
         <div>
