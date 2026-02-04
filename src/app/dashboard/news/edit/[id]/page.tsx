@@ -75,37 +75,41 @@ export default function EditNewsPage({
     useState<React.ComponentType<any> | null>(null);
 
   // ข้อมูลข่าว
-  const [title, setTitle] = useState("");
+  // ❌ ลบ Title State ออก (เพราะเราสร้างอัตโนมัติ)
   const [content, setContent] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
 
-  // --- ระบบจัดการรูปภาพเดิม (URLs) ---
+  // --- รูปภาพเดิม (URLs) ---
   const [images, setImages] = useState<string[]>([]);
-  const [selectedImages, setSelectedImages] = useState<number[]>([]); // เก็บ index รูปทั่วไปที่เลือก
-
+  const [selectedImages, setSelectedImages] = useState<number[]>([]);
   const [newsletterImages, setNewsletterImages] = useState<string[]>([]);
-  const [selectedNewsletters, setSelectedNewsletters] = useState<number[]>([]); // เก็บ index จดหมายข่าวที่เลือก
+  const [selectedNewsletters, setSelectedNewsletters] = useState<number[]>([]);
 
-  // --- ระบบจัดการรูปภาพใหม่ (Files) ---
+  // --- รูปภาพใหม่ (Files) ---
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newFilesPreview, setNewFilesPreview] = useState<string[]>([]);
-
   const [newNewsletterFiles, setNewNewsletterFiles] = useState<File[]>([]);
   const [newNewsletterPreview, setNewNewsletterPreview] = useState<string[]>(
     [],
   );
 
+  // --- Links ---
   const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
   const [currentLink, setCurrentLink] = useState({ label: "", url: "" });
 
+  // --- Video Embeds (✅ เพิ่มใหม่) ---
+  const [videoEmbeds, setVideoEmbeds] = useState<string[]>([]);
+  const [currentEmbed, setCurrentEmbed] = useState("");
+
+  // --- Fetch Data ---
   useEffect(() => {
     import("suneditor-react").then((mod) =>
       setSunEditorComponent(() => mod.default),
     );
+
     fetch(`/api/news/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        setTitle(data.title);
         setContent(data.content);
         setCategories(
           Array.isArray(data.categories)
@@ -115,11 +119,12 @@ export default function EditNewsPage({
         setImages(data.images || []);
         setNewsletterImages(data.announcementImages || []);
         setLinks(data.links || []);
+        setVideoEmbeds(data.videoEmbeds || []); // ✅ ดึงวิดีโอเดิม
         setLoading(false);
       });
   }, [id]);
 
-  // --- 🛠️ Helper Functions ---
+  // --- Helpers ---
   const compressImage = async (file: File) => {
     const options = {
       maxSizeMB: 0.8,
@@ -129,32 +134,42 @@ export default function EditNewsPage({
     return await imageCompression(file, options);
   };
 
-  // --- Logic: เลือก/ลบ รูปทั่วไป ---
-  const toggleSelectAllImages = () => {
-    if (selectedImages.length === images.length) setSelectedImages([]);
-    else setSelectedImages(images.map((_, i) => i));
+  // ✅ ฟังก์ชันสร้าง Title จาก Content
+  const generateTitleFromContent = (htmlContent: string) => {
+    if (typeof window === "undefined") return "";
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const text = doc.body.textContent || "";
+    const cleanText = text.replace(/\s+/g, " ").trim();
+    if (!cleanText) return "";
+    const limit = 100;
+    return cleanText.length > limit
+      ? cleanText.substring(0, limit) + "..."
+      : cleanText;
   };
-  const toggleSelectImage = (idx: number) => {
+
+  // --- Logic: เลือก/ลบ รูป ---
+  const toggleSelectAllImages = () =>
+    selectedImages.length === images.length
+      ? setSelectedImages([])
+      : setSelectedImages(images.map((_, i) => i));
+  const toggleSelectImage = (idx: number) =>
     setSelectedImages((prev) =>
       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
     );
-  };
   const deleteSelectedImages = () => {
     setImages((prev) => prev.filter((_, i) => !selectedImages.includes(i)));
     setSelectedImages([]);
   };
 
-  // --- Logic: เลือก/ลบ จดหมายข่าว ---
-  const toggleSelectAllNewsletters = () => {
-    if (selectedNewsletters.length === newsletterImages.length)
-      setSelectedNewsletters([]);
-    else setSelectedNewsletters(newsletterImages.map((_, i) => i));
-  };
-  const toggleSelectNewsletter = (idx: number) => {
+  const toggleSelectAllNewsletters = () =>
+    selectedNewsletters.length === newsletterImages.length
+      ? setSelectedNewsletters([])
+      : setSelectedNewsletters(newsletterImages.map((_, i) => i));
+  const toggleSelectNewsletter = (idx: number) =>
     setSelectedNewsletters((prev) =>
       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
     );
-  };
   const deleteSelectedNewsletters = () => {
     setNewsletterImages((prev) =>
       prev.filter((_, i) => !selectedNewsletters.includes(i)),
@@ -162,7 +177,7 @@ export default function EditNewsPage({
     setSelectedNewsletters([]);
   };
 
-  // --- Logic: เพิ่มรูปใหม่ ---
+  // --- Logic: รูปใหม่ ---
   const handleNewFilesChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -195,9 +210,30 @@ export default function EditNewsPage({
     }
   };
 
+  // --- Logic: Video Embed ---
+  const addEmbed = () => {
+    if (!currentEmbed.trim()) return;
+    if (!currentEmbed.includes("<iframe")) {
+      alert("กรุณาวางโค้ด Embed ที่ถูกต้อง (ต้องมี <iframe...)");
+      return;
+    }
+    setVideoEmbeds([...videoEmbeds, currentEmbed]);
+    setCurrentEmbed("");
+  };
+  const removeEmbed = (index: number) =>
+    setVideoEmbeds(videoEmbeds.filter((_, i) => i !== index));
+
   // --- Submit Logic ---
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. สร้าง Title อัตโนมัติ
+    const autoTitle = generateTitleFromContent(content);
+    if (!autoTitle) {
+      alert("กรุณาใส่เนื้อหาข่าว (เพื่อใช้สร้างหัวข้ออัตโนมัติ)");
+      return;
+    }
+
     if (submitting || isCompressing) return;
     setSubmitting(true);
 
@@ -224,12 +260,13 @@ export default function EditNewsPage({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
+          title: autoTitle, // ✅ ส่ง Title ที่สร้างเอง
           content,
           categories,
           images: finalImages,
           announcementImages: finalNewsletters,
           links,
+          videoEmbeds, // ✅ ส่งวิดีโอ
         }),
       });
 
@@ -260,6 +297,14 @@ export default function EditNewsPage({
         body {
           font-family: "Sarabun", sans-serif;
         }
+        .sun-editor-editable {
+          font-family: "Sarabun", sans-serif !important;
+        }
+        .sun-editor {
+          border-radius: 0.75rem;
+          border: 1px solid #e2e8f0 !important;
+          overflow: hidden;
+        }
       `}</style>
 
       {/* --- Top Bar --- */}
@@ -275,33 +320,21 @@ export default function EditNewsPage({
         </div>
         {isCompressing && (
           <span className="text-blue-600 text-xs font-black animate-pulse bg-blue-50 px-3 py-1 rounded-full border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
-            ⏳ กำลังย่อขนาดรูปภาพใหม่...
+            ⏳ กำลังย่อขนาดรูป...
           </span>
         )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
-        {/* --- Card 1: ข้อมูลหลัก --- */}
+        {/* --- Card 1: ข้อมูลหลัก (ไม่มี Title Input) --- */}
         <section className="rounded-3xl space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl  text-amber-600 flex items-center justify-center text-xl dark:bg-amber-900/30 dark:text-amber-400">
+            <div className="w-10 h-10 rounded-2xl text-amber-600 flex items-center justify-center text-xl dark:bg-amber-900/30 dark:text-amber-400">
               📝
             </div>
             <h2 className="text-lg font-bold text-slate-700 dark:text-slate-200">
               รายละเอียดข่าว
             </h2>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 dark:text-slate-500">
-              หัวข้อข่าวสาร
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-lg font-bold focus:border-amber-500 outline-none transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500 dark:focus:border-amber-500"
-              placeholder="ระบุหัวข้อข่าว..."
-            />
           </div>
 
           <div className="space-y-3">
@@ -319,11 +352,7 @@ export default function EditNewsPage({
                         : [...prev, cat.value],
                     )
                   }
-                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-center font-bold text-sm ${
-                    categories.includes(cat.value)
-                      ? cat.color
-                      : "border-slate-100 text-slate-400 hover:border-slate-200 dark:border-zinc-700 dark:text-slate-500 dark:hover:border-zinc-600"
-                  }`}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all text-center font-bold text-sm ${categories.includes(cat.value) ? cat.color : "border-slate-100 text-slate-400 hover:border-slate-200 dark:border-zinc-700 dark:text-slate-500 dark:hover:border-zinc-600"}`}
                 >
                   {cat.label}
                 </div>
@@ -374,7 +403,7 @@ export default function EditNewsPage({
                   className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 dark:border-zinc-700 dark:text-slate-400 dark:hover:bg-zinc-800"
                 >
                   {selectedImages.length === images.length
-                    ? "✕ ยกเลิกการเลือก"
+                    ? "✕ ยกเลิก"
                     : "✓ เลือกทั้งหมด"}
                 </button>
               )}
@@ -395,11 +424,7 @@ export default function EditNewsPage({
               <div
                 key={`old-img-${idx}`}
                 onClick={() => toggleSelectImage(idx)}
-                className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer border-4 transition-all ${
-                  selectedImages.includes(idx)
-                    ? "border-red-500 scale-90"
-                    : "border-slate-100 shadow-sm hover:border-blue-200 dark:border-zinc-700 dark:hover:border-blue-500"
-                }`}
+                className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer border-4 transition-all ${selectedImages.includes(idx) ? "border-red-500 scale-90" : "border-slate-100 shadow-sm hover:border-blue-200 dark:border-zinc-700 dark:hover:border-blue-500"}`}
               >
                 <Image src={img} alt="old" fill className="object-cover" />
                 {selectedImages.includes(idx) && (
@@ -409,7 +434,6 @@ export default function EditNewsPage({
                 )}
               </div>
             ))}
-
             {newFilesPreview.map((src, idx) => (
               <div
                 key={`new-img-${idx}`}
@@ -426,14 +450,13 @@ export default function EditNewsPage({
                   }}
                   className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold"
                 >
-                  ยกเลิกรูปนี้
+                  ยกเลิก
                 </button>
                 <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">
                   New
                 </div>
               </div>
             ))}
-
             <label className="aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all dark:border-zinc-600 dark:hover:bg-blue-900/20 dark:hover:border-blue-500">
               <input
                 type="file"
@@ -466,7 +489,7 @@ export default function EditNewsPage({
                   className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 dark:border-zinc-700 dark:text-slate-400 dark:hover:bg-zinc-800"
                 >
                   {selectedNewsletters.length === newsletterImages.length
-                    ? "✕ ยกเลิกทั้งหมด"
+                    ? "✕ ยกเลิก"
                     : "✓ เลือกทั้งหมด"}
                 </button>
               )}
@@ -486,11 +509,7 @@ export default function EditNewsPage({
               <div
                 key={`old-nl-${idx}`}
                 onClick={() => toggleSelectNewsletter(idx)}
-                className={`relative aspect-3/4 rounded-xl overflow-hidden cursor-pointer border-4 bg-slate-50 transition-all ${
-                  selectedNewsletters.includes(idx)
-                    ? "border-red-500 scale-90"
-                    : "border-slate-100 shadow-sm hover:border-purple-200 dark:bg-zinc-800 dark:border-zinc-700 dark:hover:border-purple-500"
-                }`}
+                className={`relative aspect-3/4 rounded-xl overflow-hidden cursor-pointer border-4 bg-slate-50 transition-all ${selectedNewsletters.includes(idx) ? "border-red-500 scale-90" : "border-slate-100 shadow-sm hover:border-purple-200 dark:bg-zinc-800 dark:border-zinc-700 dark:hover:border-purple-500"}`}
               >
                 <Image src={img} alt="old-nl" fill className="object-contain" />
                 {selectedNewsletters.includes(idx) && (
@@ -500,7 +519,6 @@ export default function EditNewsPage({
                 )}
               </div>
             ))}
-
             {newNewsletterPreview.map((src, idx) => (
               <div
                 key={`new-nl-${idx}`}
@@ -526,7 +544,6 @@ export default function EditNewsPage({
                 </div>
               </div>
             ))}
-
             <label className="aspect-3/4 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all dark:border-zinc-600 dark:hover:bg-purple-900/20 dark:hover:border-purple-500">
               <input
                 type="file"
@@ -545,7 +562,7 @@ export default function EditNewsPage({
           </div>
         </section>
 
-        {/* --- Card 4: ลิงก์ภายนอก --- */}
+        {/* --- Card 4: ลิงก์ --- */}
         <section className="rounded-3xl space-y-6">
           <h2 className="font-bold text-slate-700 flex items-center gap-2 text-lg dark:text-slate-200">
             🔗 ลิงก์ภายนอก / เอกสารแนบ
@@ -605,6 +622,52 @@ export default function EditNewsPage({
             ))}
           </div>
         </section>
+
+        {/* --- Card 5: Video Embeds (✅ เพิ่มใหม่) --- */}
+        <section className="rounded-3xl space-y-6">
+          <h2 className="font-bold text-slate-700 flex items-center gap-2 text-lg dark:text-slate-200">
+            🎥 วิดีโอ (Embed Code)
+          </h2>
+          <div className="flex flex-col gap-3">
+            <textarea
+              rows={3}
+              placeholder='วางโค้ด Embed ที่นี่... เช่น <iframe src="..." ></iframe>'
+              value={currentEmbed}
+              onChange={(e) => setCurrentEmbed(e.target.value)}
+              className="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-slate-200 focus:border-red-500 transition-all font-mono text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500"
+            />
+            <button
+              type="button"
+              onClick={addEmbed}
+              className="self-end bg-red-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200 dark:shadow-none"
+            >
+              + เพิ่มวิดีโอ
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            {videoEmbeds.map((code, i) => (
+              <div
+                key={i}
+                className="relative group border border-slate-200 rounded-xl p-2 bg-white dark:bg-zinc-800 dark:border-zinc-700"
+              >
+                <button
+                  type="button"
+                  onClick={() => removeEmbed(i)}
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md z-20 hover:scale-110 transition-transform"
+                >
+                  ✕
+                </button>
+                <div
+                  className="aspect-video w-full overflow-hidden rounded-lg bg-black/5 [&>iframe]:w-full [&>iframe]:h-full"
+                  dangerouslySetInnerHTML={{ __html: code }}
+                />
+                <div className="mt-2 text-[10px] text-slate-400 font-mono truncate px-2">
+                  {code}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
       {/* --- Floating Bottom Bar --- */}
@@ -619,11 +682,7 @@ export default function EditNewsPage({
           <button
             onClick={handleUpdate}
             disabled={submitting || isCompressing}
-            className={`flex-1 py-4 rounded-full font-bold text-white shadow-xl shadow-amber-500/20 transition-all ${
-              submitting || isCompressing
-                ? "bg-slate-300 cursor-not-allowed dark:bg-zinc-700"
-                : "bg-gradient-to-r from-amber-500 to-orange-600 hover:scale-[1.02] active:scale-100 hover:shadow-amber-500/40 dark:shadow-none"
-            }`}
+            className={`flex-1 py-4 rounded-full font-bold text-white shadow-xl shadow-amber-500/20 transition-all ${submitting || isCompressing ? "bg-slate-300 cursor-not-allowed dark:bg-zinc-700" : "bg-gradient-to-r from-amber-500 to-orange-600 hover:scale-[1.02] active:scale-100 hover:shadow-amber-500/40 dark:shadow-none"}`}
           >
             {submitting
               ? "⏳ กำลังบันทึกข้อมูลล่าสุด..."

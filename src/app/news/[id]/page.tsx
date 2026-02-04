@@ -81,6 +81,7 @@ const IconExternalLink = () => (
   </svg>
 );
 
+// ✅ เพิ่ม videoEmbeds ใน Interface
 interface NewsItem {
   _id: string;
   title: string;
@@ -90,6 +91,7 @@ interface NewsItem {
   images?: string[];
   announcementImages?: string[];
   links?: { label: string; url: string }[];
+  videoEmbeds?: string[]; // <--- เพิ่มตรงนี้
   createdAt: Date | string;
 }
 
@@ -215,11 +217,7 @@ export default async function NewsDetailPage({
               </div>
 
               <div className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
-                {/* Use actual title if available, otherwise fallback */}
-                <p className="text-center">
-                  {/* {news.title || "วิทยาลัยเทคนิคกันทรลักษ์"} */}
-                  วิทยาลัยเทคนิคกันทรลักษ์
-                </p>
+                {news.title}
               </div>
 
               <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-zinc-800 pt-6">
@@ -251,6 +249,32 @@ export default async function NewsDetailPage({
             dangerouslySetInnerHTML={{ __html: news.content || "" }}
           />
 
+          <div className="">
+            <FootTitle />
+          </div>
+          <hr className="border-slate-200 dark:border-zinc-800" />
+
+          {/* --- 🎥 Video Section (เพิ่มส่วนนี้) --- */}
+          {news.videoEmbeds && news.videoEmbeds.length > 0 && (
+            <section className="space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-1.5 bg-red-600 rounded-full"></div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  วิดีโอประกอบ
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {news.videoEmbeds.map((embedCode, index) => (
+                  <div
+                    key={index}
+                    className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg bg-black border border-slate-200 dark:border-zinc-800 [&>iframe]:w-full [&>iframe]:h-full"
+                    dangerouslySetInnerHTML={{ __html: embedCode }}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* --- Links & Downloads Section --- */}
           {news.links && news.links.length > 0 && (
             <div className="bg-slate-50 dark:bg-zinc-900/50 rounded-3xl p-8 border border-slate-200 dark:border-zinc-800">
@@ -281,13 +305,7 @@ export default async function NewsDetailPage({
             </div>
           )}
 
-          <div className="">
-            <FootTitle />
-          </div>
-
-          <hr className="border-slate-200 dark:border-zinc-800" />
-
-          {/* --- Documents / Posters Section (ข่าวประกาศ/คำสั่ง) --- */}
+          {/* --- Documents / Posters Section --- */}
           {news.announcementImages && news.announcementImages.length > 0 && (
             <section className="space-y-8">
               <div className="flex items-center gap-3">
@@ -296,7 +314,6 @@ export default async function NewsDetailPage({
                   จดหมายข่าวประชาสัมพันธ์
                 </h3>
               </div>
-
               <div className="flex flex-col gap-10">
                 {news.announcementImages.map((img, idx) => (
                   <a
@@ -309,7 +326,6 @@ export default async function NewsDetailPage({
                     <Image
                       src={img}
                       alt={`Announcement ${idx + 1}`}
-                      // ✅ Uncropped: width 100%, height auto
                       width={0}
                       height={0}
                       sizes="100vw"
@@ -322,26 +338,20 @@ export default async function NewsDetailPage({
             </section>
           )}
 
-          {/* --- Gallery Section (ภาพกิจกรรม) --- */}
+          {/* --- Gallery Section --- */}
           {news.images && news.images.length > 0 && (
             <section className="space-y-8">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ประมวลภาพกิจกรรม
+                  ประมวลภาพกิจกรรม{" "}
                   <span className="text-slate-400 font-normal text-lg ml-2">
                     ({news.images.length})
                   </span>
                 </h3>
               </div>
-
-              {/* ✅ Masonry Logic: Check length < 5 ? 1 column : 3 columns */}
               <div
-                className={`${
-                  news.images.length < 5
-                    ? "columns-1" // ถ้าน้อยกว่า 5 รูป -> 1 คอลัมน์ (รูปใหญ่เต็ม)
-                    : "columns-1 sm:columns-2 lg:columns-3" // ถ้า 5 รูปขึ้นไป -> แบ่ง 3 คอลัมน์
-                } gap-4 space-y-4`}
+                className={`${news.images.length < 5 ? "columns-1" : "columns-1 sm:columns-2 lg:columns-3"} gap-4 space-y-4`}
               >
                 {news.images.map((img, idx) => (
                   <a
@@ -354,7 +364,6 @@ export default async function NewsDetailPage({
                     <Image
                       src={img}
                       alt={`Gallery image ${idx + 1}`}
-                      // ✅ Uncropped: width 100%, height auto
                       width={0}
                       height={0}
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -370,7 +379,6 @@ export default async function NewsDetailPage({
           {/* --- Navigation --- */}
           <nav className="border-t border-slate-200 dark:border-zinc-800 pt-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Prev */}
               {prev ? (
                 <Link
                   href={`/news/${prev._id}`}
@@ -388,7 +396,6 @@ export default async function NewsDetailPage({
                 <div className="hidden md:block"></div>
               )}
 
-              {/* Next */}
               {next ? (
                 <Link
                   href={`/news/${next._id}`}

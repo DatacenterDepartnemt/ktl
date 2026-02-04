@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 
+// --- POST: สร้างข่าวใหม่ ---
 export async function POST(request: Request) {
   try {
-    const { title, categories, content, images, announcementImages, links } =
-      await request.json();
+    // 1. รับค่า videoEmbeds เข้ามาด้วย
+    const {
+      title,
+      categories,
+      content,
+      images,
+      announcementImages,
+      links,
+      videoEmbeds, // ✅ เพิ่มตรงนี้
+    } = await request.json();
 
     // Validation
     if (
@@ -27,17 +36,16 @@ export async function POST(request: Request) {
     const newNews = {
       title,
       categories,
-      // ✅ เก็บหมวดหมู่แรกไว้เป็น category หลัก เพื่อให้ Query ง่ายขึ้นในบางจุด
-      category: categories[0],
+      category: categories[0], // เก็บ category แรกเป็นหลัก
       content,
       images: images || [],
       announcementImages: announcementImages || [],
       links: links || [],
 
-      // ✅ ใช้ Date Object แทน ISOString เพื่อให้ MongoDB เรียงลำดับ (Sort) ได้แม่นยำและรวดเร็วที่สุด
-      createdAt: new Date(),
+      // ✅ บันทึก Video Embeds (ถ้าไม่มีให้เป็น array ว่าง)
+      videoEmbeds: videoEmbeds || [],
 
-      // ✅ เพิ่มสถานะ (เผื่ออนาคตทำระบบ Draft/Publish)
+      createdAt: new Date(),
       status: "published",
     };
 
@@ -60,7 +68,7 @@ export async function POST(request: Request) {
   }
 }
 
-// ✅ เพิ่มฟังก์ชัน GET เพื่อรองรับการโหลดแบบ Load More (15 เรื่องแรก)
+// --- GET: ดึงรายการข่าว (Load More) ---
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -79,7 +87,6 @@ export async function GET(request: Request) {
       .limit(limit)
       .toArray();
 
-    // นับจำนวนทั้งหมดเพื่อเอาไปเช็คในหน้า Frontend ว่าต้องโชว์ปุ่ม "โหลดเพิ่ม" ไหม
     const total = await db.collection("news").countDocuments();
 
     return NextResponse.json({ news, total });
