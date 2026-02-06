@@ -217,7 +217,8 @@ export default async function NewsDetailPage({
               </div>
 
               <div className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
-                {news.title}
+                {/* {news.title} */}
+                <p className="text-center">วิทยาลัยเทคนิคกันทรลักษ์</p>
               </div>
 
               <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-zinc-800 pt-6">
@@ -344,7 +345,7 @@ export default async function NewsDetailPage({
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ประมวลภาพกิจกรรม{" "}
+                  ประมวลภาพกิจกรรม
                   <span className="text-slate-400 font-normal text-lg ml-2">
                     ({news.images.length})
                   </span>
@@ -353,7 +354,7 @@ export default async function NewsDetailPage({
               <div
                 className={`${news.images.length < 5 ? "columns-1" : "columns-1 sm:columns-2 lg:columns-3"} gap-4 space-y-4`}
               >
-                {news.images.map((img, idx) => (
+                {/* {news.images.map((img, idx) => (
                   <a
                     key={idx}
                     href={img}
@@ -371,6 +372,19 @@ export default async function NewsDetailPage({
                       className="transition-transform duration-700 hover:scale-105"
                     />
                   </a>
+                ))} */}
+                {news.images.map((img, idx) => (
+                  <div className="block relative w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 break-inside-avoid cursor-zoom-in">
+                    <Image
+                      src={img}
+                      alt={`Gallery image ${idx + 1}`}
+                      width={0}
+                      height={0}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      style={{ width: "100%", height: "auto" }}
+                      className="transition-transform duration-700 hover:scale-105"
+                    />
+                  </div>
                 ))}
               </div>
             </section>
